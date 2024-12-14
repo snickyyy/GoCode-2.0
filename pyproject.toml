@@ -15,12 +15,16 @@ alembic = "^1.14.0"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 aiosqlite = "^0.20.0"
 pydantic-settings = "^2.6.1"
+sqlalchemy-utils = "^0.41.2"
+bcrypt = "^4.2.1"
+cryptography = "^44.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
 black = "^24.10.0"
 flake8 = "^7.1.1"
+httpx = "^0.28.1"
 
 [build-system]
 requires = ["poetry-core"]
