@@ -1,16 +1,15 @@
 from enum import Enum
+from typing import List, TYPE_CHECKING
 
 from sqlalchemy import String, Enum as SQLAlchemyEnum, Column, Integer
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
 from sqlalchemy_utils import ChoiceType
 
 from core.models import BaseModel
 
-# ROLE_CHOICES = {
-#     "anonymous": 0,
-#     "user": 1,
-#     "admin": 2,
-# }
+if TYPE_CHECKING:
+    from api.problems.models import Solution
+    from api.forum.models import Post
 
 
 class ROLES(Enum):
@@ -30,12 +29,9 @@ class User(BaseModel):
     role: Mapped[ROLES] = mapped_column(ChoiceType(ROLES, impl=Integer()))
     image: Mapped[str] = mapped_column(nullable=True)
 
-
-us1 = User(
-    username="snicky",
-    password="qwerty",
-    email="qwerty@gmail.com",
-    description="good",
-    role="admin",
-)
-print(us1)
+    solutions: Mapped[List["Solution"]] = relationship(
+        "Solution", backref="user", passive_deletes=True
+    )
+    posts: Mapped[List["Post"]] = relationship(
+        "Post", backref="user", passive_deletes=True
+    )
