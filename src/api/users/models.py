@@ -1,15 +1,14 @@
+from sqlalchemy import String, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils import ChoiceType
+from api.users.auth.utils.utils import make_hash, check_hash
+from core.models import BaseModel
 from enum import Enum
 from typing import List, TYPE_CHECKING
 
-from sqlalchemy import String, Enum as SQLAlchemyEnum, Column, Integer
-from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
-from sqlalchemy_utils import ChoiceType
-
-from core.models import BaseModel
-
 if TYPE_CHECKING:
-    from api.problems.models import Solution
-    from api.forum.models import Post
+
+    from api.forum.models import Post, Comment
 
 
 class ROLES(Enum):
@@ -17,8 +16,21 @@ class ROLES(Enum):
     USER = 1, "user"
     ADMIN = 2, "admin"
 
+    def __new__(cls, value, label):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.label = label
+        return obj
+
     def __str__(self):
-        return self.name
+        return self.label
+
+    @classmethod
+    def get_value_by_label(cls, label: str):
+        for role in cls:
+            if role.label == label.lower():
+                return role.value
+        raise ValueError(f"No matching role found for label: {label}")
 
 
 class User(BaseModel):
@@ -29,9 +41,15 @@ class User(BaseModel):
     role: Mapped[ROLES] = mapped_column(ChoiceType(ROLES, impl=Integer()))
     image: Mapped[str] = mapped_column(nullable=True)
 
-    solutions: Mapped[List["Solution"]] = relationship(
-        "Solution", backref="user", passive_deletes=True
-    )
+    from api.problems.models import Solution
+    solutions = relationship("Solution", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
     posts: Mapped[List["Post"]] = relationship(
         "Post", backref="user", passive_deletes=True
     )
+    comments: Mapped[List["Comment"]] = relationship("Comment", backref="user")
+
+    def set_password(self, password):
+        self.password = make_hash(password).decode()
+
+    def check_password(self, password):
+        return check_hash(password, self.password)

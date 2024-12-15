@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 
 from config.settings import settings
 
-crypt = Fernet(settings.SECRET_KEY)
+crypt = Fernet(settings.AUTH.SECRET_KEY)
 
 
 def encrypt_data(data: dict):
@@ -20,9 +20,9 @@ def decrypt_data(data: str):
     return json.loads(decrypted_data.decode())
 
 
-def make_hash(password: str) -> bytes:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+def make_hash(value: str) -> bytes:
+    return bcrypt.hashpw(value.encode(), bcrypt.gensalt())
 
 
-def check_password(password: str, hashed_password: str):
-    return bcrypt.checkpw(password.encode(), hashed_password.encode())
+def check_hash(value: str, hashed_value: str):
+    return bcrypt.checkpw(value.encode(), hashed_value.encode())

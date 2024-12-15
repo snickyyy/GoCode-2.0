@@ -1,12 +1,14 @@
 from enum import Enum
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from sqlalchemy import String, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, Mapper
 from sqlalchemy_utils import ChoiceType
 
 from core.models import BaseModel
 
+if TYPE_CHECKING:
+    from api.users.models import User
 
 class DIFFICULTLY_CHOICES(Enum):
     EASY = 1, "easy"
@@ -62,13 +64,15 @@ class Task(BaseModel):
 
 
 class Solution(BaseModel):
-    user: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     solution: Mapped[str] = mapped_column(String(1445))
-    task: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
-    language: Mapped[int] = mapped_column(
-        ForeignKey("languages.id", ondelete="CASCADE")
-    )
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id", ondelete="CASCADE"))
     status: Mapped[int] = mapped_column(ChoiceType(TASK_STATUS_CHOICES, impl=Integer()))
     time: Mapped[int]
     memory: Mapped[int]
     test_passed: Mapped[int]
+
+    user = relationship("User", back_populates="solutions", passive_deletes=True, uselist=True)
+    task: Mapped["Task"] = relationship("Task", backref="solutions", passive_deletes=True)
+    language: Mapped["Language"] = relationship("Language", backref="solutions", passive_deletes=True)

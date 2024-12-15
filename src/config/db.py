@@ -23,7 +23,7 @@ class DbSettings:
         expire_on_commit=False,
     )
 
-    def get_session(self):
+    async def get_session(self):
         local_session = async_scoped_session(
             session_factory=self.session_maker,
             scopefunc=current_task,
@@ -31,7 +31,7 @@ class DbSettings:
 
         async with local_session() as session:
             yield session
-            local_session.remove()
+            await local_session.remove()
 
 
 db_handler = DbSettings()
