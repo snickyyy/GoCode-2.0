@@ -26,23 +26,19 @@ class Category(BaseModel):
 
     name: Mapped[str] = mapped_column(String(50))
 
-    tasks: Mapped[List["Task"]] = relationship(
-        "Task", backref="category", passive_deletes=True
-    )
+    tasks = relationship("Task", back_populates="category", passive_deletes=True)
 
 
 class Language(BaseModel):
     name: Mapped[str] = mapped_column(String(28))
 
-    solutions: Mapped[List["Solution"]] = relationship(
-        "Solution", backref="language", passive_deletes=True
-    )
+    solutions = relationship("Solution", back_populates="language", passive_deletes=True)
 
 
 class Test(BaseModel):
     path: Mapped[str] = mapped_column(String(280))
 
-    task: Mapped["Task"] = relationship("Task", backref="test", passive_deletes=True)
+    task: Mapped["Task"] = relationship("Task", back_populates="test", passive_deletes=True)
 
 
 class Task(BaseModel):
@@ -51,16 +47,14 @@ class Task(BaseModel):
     difficulty: Mapped[int] = mapped_column(
         ChoiceType(DIFFICULTLY_CHOICES, impl=Integer())
     )
-    category: Mapped[int] = mapped_column(
-        ForeignKey("categories.id", ondelete="CASCADE")
-    )
-    tests: Mapped[int] = mapped_column(ForeignKey("tests.id", ondelete="CASCADE"))
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id", ondelete="CASCADE"))
+    test_id: Mapped[int] = mapped_column(ForeignKey("tests.id", ondelete="CASCADE"))
     constraints: Mapped[str] = mapped_column(String(100))
     image: Mapped[str]
 
-    solutions: Mapped[List["Solution"]] = relationship(
-        "Solution", backref="tasks", passive_deletes=True
-    )
+    solutions = relationship("Solution", back_populates="task", passive_deletes=True)
+    category = relationship("Category", back_populates="tasks", passive_deletes=True, uselist=True)
+    test = relationship("Test", back_populates="task", passive_deletes=True)
 
 
 class Solution(BaseModel):
@@ -74,5 +68,5 @@ class Solution(BaseModel):
     test_passed: Mapped[int]
 
     user = relationship("User", back_populates="solutions", passive_deletes=True, uselist=True)
-    task: Mapped["Task"] = relationship("Task", backref="solutions", passive_deletes=True)
-    language: Mapped["Language"] = relationship("Language", backref="solutions", passive_deletes=True)
+    task = relationship("Task", back_populates="solutions", passive_deletes=True, uselist=True)
+    language  = relationship("Language", back_populates="solutions", passive_deletes=True, uselist=True)

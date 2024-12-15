@@ -6,10 +6,6 @@ from core.models import BaseModel
 from enum import Enum
 from typing import List, TYPE_CHECKING
 
-if TYPE_CHECKING:
-
-    from api.forum.models import Post, Comment
-
 
 class ROLES(Enum):
     ANONYMOUS = 0, "anonymous"
@@ -43,10 +39,9 @@ class User(BaseModel):
 
     from api.problems.models import Solution
     solutions = relationship("Solution", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
-    posts: Mapped[List["Post"]] = relationship(
-        "Post", backref="user", passive_deletes=True
-    )
-    comments: Mapped[List["Comment"]] = relationship("Comment", backref="user")
+    from api.forum.models import Post, Comment
+    posts = relationship("Post", back_populates="user", passive_deletes=True)
+    comments = relationship("Comment", back_populates="user", passive_deletes=True)
 
     def set_password(self, password):
         self.password = make_hash(password).decode()
