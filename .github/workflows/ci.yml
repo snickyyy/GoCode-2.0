@@ -7,6 +7,11 @@ on:
 env:
   DB_URL: ${{ secrets.DB_URL }}
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+  MAIL_FROM: ${{ secrets.MAIL_FROM }}
+  MAIL_PORT: ${{ secrets.MAIL_PORT }}
+  MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
 
 jobs:
   tests:
