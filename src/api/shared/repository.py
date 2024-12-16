@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, or_, and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import db_handler
@@ -25,13 +26,18 @@ class BaseRepository:
 
     async def create(self, schema):
         obj = self.model(**schema.model_dump())
-        self.db.add(obj)
-        await self.db.commit()
+        try:
+            self.db.add(obj)
+            await self.db.commit()
+        except IntegrityError:
+            raise HTTPException(status_code=409, detail="Data must be unique")
         return obj
 
 
     async def update(self, id, schema: BaseModel):
         obj = await self.get_by_id(id)
+        if not obj:
+            raise HTTPException(status_code=404, detail="Object not found")
         for key, value in schema.model_dump():
             setattr(obj, key, value)
         await self.db.commit()
@@ -39,8 +45,11 @@ class BaseRepository:
 
     async def delete(self, id: int):
         obj = await self.get_by_id(id)
+        if not obj:
+            raise HTTPException(status_code=404, detail="Object not found")
         await self.db.delete(obj)
         await self.db.commit()
+        return obj
 
     async def strict_filter(self, schema, skip: int = 0, limit: int = 100):
         stmt = select(self.model).filter(

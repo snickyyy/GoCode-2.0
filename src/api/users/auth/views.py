@@ -23,7 +23,7 @@ async def register(schema: RegisterUser, session: AsyncSession = Depends(db_hand
                                  exp=datetime.now() + timedelta(seconds=settings.AUTH.EMEIL_CONFIRM_TIME_SEC),
                                  session=session)
     await send_email(email=schema.email, username=schema.username, token=token)
-    return {"success": "an email has been sent"}
+    return {"detail": "an email has been sent"}
 
 @router.get("/activate-account/{token}", response_model=UserInfo)
 async def activate_account(token, session: AsyncSession = Depends(db_handler.get_session)):

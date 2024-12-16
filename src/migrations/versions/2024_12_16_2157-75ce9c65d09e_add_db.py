@@ -1,8 +1,8 @@
-"""add db and tables
+"""add db
 
-Revision ID: b13c0432c0af
+Revision ID: 75ce9c65d09e
 Revises: 
-Create Date: 2024-12-16 01:10:07.522415
+Create Date: 2024-12-16 21:57:41.807742
 
 """
 
@@ -11,13 +11,13 @@ from typing import Sequence, Union
 import sqlalchemy_utils
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import Integer, INTEGER
+from sqlalchemy import Integer
 
 from api.problems.models import DIFFICULTLY_CHOICES, TASK_STATUS_CHOICES
 from api.users.models import ROLES
 
 # revision identifiers, used by Alembic.
-revision: str = "b13c0432c0af"
+revision: str = "75ce9c65d09e"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,6 +32,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
     )
     op.create_table(
         "languages",
@@ -40,6 +41,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
     )
     op.create_table(
         "sessions",
@@ -72,6 +74,8 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
+        sa.UniqueConstraint("username"),
     )
     op.create_table(
         "posts",
@@ -84,6 +88,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("title"),
     )
     op.create_table(
         "tasks",
@@ -106,6 +111,7 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["test_id"], ["tests.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("title"),
     )
     op.create_table(
         "comments",

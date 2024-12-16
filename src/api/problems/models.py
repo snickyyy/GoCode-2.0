@@ -42,7 +42,7 @@ class Test(BaseModel):
 
 
 class Task(BaseModel):
-    title: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str] = mapped_column(String(255))
     difficulty: Mapped[int] = mapped_column(
         ChoiceType(DIFFICULTLY_CHOICES, impl=Integer())

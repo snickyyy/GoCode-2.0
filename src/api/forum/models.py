@@ -5,7 +5,7 @@ from core.models import BaseModel
 
 
 class Post(BaseModel):
-    title: Mapped[str] = mapped_column(String(50))
+    title: Mapped[str] = mapped_column(String(50), unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     content: Mapped[str] = mapped_column(String(600))
     image: Mapped[str] = mapped_column(String(250))
