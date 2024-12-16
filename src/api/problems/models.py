@@ -24,13 +24,13 @@ class TASK_STATUS_CHOICES(Enum):
 class Category(BaseModel):
     __tablename__ = "categories"
 
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String(50), unique=True)
 
     tasks = relationship("Task", back_populates="category", passive_deletes=True)
 
 
 class Language(BaseModel):
-    name: Mapped[str] = mapped_column(String(28))
+    name: Mapped[str] = mapped_column(String(28), unique=True)
 
     solutions = relationship("Solution", back_populates="language", passive_deletes=True)
 

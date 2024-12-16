@@ -23,9 +23,9 @@ class ROLES(Enum):
 
 
 class User(BaseModel):
-    username: Mapped[str] = mapped_column(String(25))
+    username: Mapped[str] = mapped_column(String(25), unique=True)
     password: Mapped[str]
-    email: Mapped[str] = mapped_column(String(180))
+    email: Mapped[str] = mapped_column(String(180), unique=True)
     description: Mapped[str] = mapped_column(String(120), nullable=True)
     role: Mapped[ROLES] = mapped_column(ChoiceType(ROLES, impl=Integer()))
     image: Mapped[str] = mapped_column(nullable=True)
