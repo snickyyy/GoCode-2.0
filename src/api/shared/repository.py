@@ -9,10 +9,10 @@ from config.db import db_handler
 class BaseRepository:
     model = None
 
-    def __init__(self, session: AsyncSession = Depends(db_handler.get_session)):
+    def __init__(self, session: AsyncSession):
         self.db = session
 
-    async def get_by_id(self, id):
+    async def get_by_id(self, id: int|str):
         query = await self.db.get(self.model, id)
         if not query:
             raise HTTPException(status_code=404, detail="Object not found")

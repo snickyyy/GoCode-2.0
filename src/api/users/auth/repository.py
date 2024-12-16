@@ -10,7 +10,7 @@ class SessionRepository(BaseRepository):
 
     async def create(self, payload: dict, exp: datetime):
         _encrypt_payload = encrypt_data(payload)
-        session = self.model(payload=_encrypt_payload, expired_at=exp)
+        session = self.model(data=_encrypt_payload, expires_at=exp)
         self.db.add(session)
         await self.db.commit()
         return session.id

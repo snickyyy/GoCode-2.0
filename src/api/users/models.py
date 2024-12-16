@@ -4,27 +4,20 @@ from sqlalchemy_utils import ChoiceType
 from api.users.auth.utils.utils import make_hash, check_hash
 from core.models import BaseModel
 from enum import Enum
-from typing import List, TYPE_CHECKING
 
 
 class ROLES(Enum):
-    ANONYMOUS = 0, "anonymous"
-    USER = 1, "user"
-    ADMIN = 2, "admin"
+    ANONYMOUS = 0
+    USER = 1
+    ADMIN = 2
 
-    def __new__(cls, value, label):
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.label = label
-        return obj
-
-    def __str__(self):
-        return self.label
+    def label(self):
+        return self.name.lower()
 
     @classmethod
     def get_value_by_label(cls, label: str):
         for role in cls:
-            if role.label == label.lower():
+            if role.label() == label.lower():
                 return role.value
         raise ValueError(f"No matching role found for label: {label}")
 
