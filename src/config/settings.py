@@ -1,12 +1,14 @@
 from os import getenv
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 load_dotenv()
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 class DataBase(BaseSettings):
-    DB_URL: str = getenv("DB_URL")
+    DB_URL: str = getenv("DB_URL", f"sqlite+aiosqlite:///{BASE_DIR}/db.sqlite3")
 
 
 class Authorization(BaseSettings):
