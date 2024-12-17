@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.users.auth.utils.permissions import check_auth_user
 from api.users.repository import UserRepository
 from api.users.views import router as users_api
 from config.db import db_handler
@@ -22,5 +23,5 @@ app.include_router(users_api)
 
 
 @app.get("/")
-async def read_root(session: AsyncSession = Depends(db_handler.get_session)):
-    return await UserRepository().list(session)
+async def read_root(user=Depends(check_auth_user), session: AsyncSession = Depends(db_handler.get_session)):
+    return await UserRepository(session).list()

@@ -19,3 +19,16 @@ def test_register_user():
     response = client.post(url, json=data)
     assert response.status_code == 409
     assert response.json()["detail"] == "This username or email already exists"
+
+
+def test_bad_login_user():
+    url = "/accounts/auth/login"
+    data = {"username_or_email": "testuser", "password": "test123"}
+
+    response = client.post(url, json=data)
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials"
+
+    response = client.post(url, json={"username_or_email": "testuser", "password": "wrong_password"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials"
