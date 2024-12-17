@@ -21,7 +21,7 @@ async def create_session(user_obj: User, sess_type: SessionsTypes, exp: datetime
                 "username": user_obj.username,
                 "email": user_obj.email,
                 "role": user_obj.role,
-                "iat": datetime.utcnow().isoformat()
+                "iat": datetime.now().isoformat()
                }
     sess_id = await SessionRepository(session).create(payload=payload, exp=exp)
     return sess_id
@@ -29,7 +29,7 @@ async def create_session(user_obj: User, sess_type: SessionsTypes, exp: datetime
 
 async def check_email_session(sessions_id, session: AsyncSession)-> User | bool:
     session_obj: Session = await SessionRepository(session).get_by_id(id=sessions_id)
-    if session_obj.expires_at <= datetime.utcnow():
+    if session_obj.expires_at <= datetime.now():
         return False
 
     _decrypt_session: dict = decrypt_data(session_obj.data)

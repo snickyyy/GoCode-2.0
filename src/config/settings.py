@@ -17,6 +17,8 @@ class Authorization(BaseSettings):
 
     EMEIL_CONFIRM_TIME_SEC: int = 43_200
 
+    SESSION_AUTH_KEY: str = "Authorization"
+    SESSION_DURATION_SEC: int = 86_400
 
 class Email(BaseSettings):
     MAIL_USERNAME: str = getenv("MAIL_USERNAME")

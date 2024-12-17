@@ -6,4 +6,8 @@ class RegisterUser(BaseModel):
     password: str
     email: EmailStr
 
+class LoginUser(BaseModel):
+    username_or_email: str
+    password: str
+
 
