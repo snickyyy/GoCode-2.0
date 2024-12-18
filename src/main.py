@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.users.auth.utils.permissions import check_auth_user
 from api.users.repository import UserRepository
 from api.users.views import router as users_api
+from api.problems.views import router as problems_api
 from config.db import db_handler
 
 app = FastAPI()
@@ -20,6 +21,7 @@ app.add_middleware(
 )
 
 app.include_router(users_api)
+app.include_router(problems_api)
 
 
 @app.get("/")
