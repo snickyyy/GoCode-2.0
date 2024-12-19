@@ -1,3 +1,4 @@
+from fastapi import Request, Depends
 from datetime import datetime
 from enum import Enum
 
@@ -9,6 +10,8 @@ from api.users.auth.repository import SessionRepository
 from api.users.auth.utils.utils import decrypt_data
 from api.users.models import User, ROLES
 from api.users.repository import UserRepository
+from config.db import db_handler
+from config.settings import settings
 
 
 class SessionsTypes(Enum):
@@ -53,6 +56,13 @@ async def check_user_session(sessions_id, session: AsyncSession):
     if decrypt_sess.get("role") == ROLES.ANONYMOUS.label():
         return False
     user_by_session = await UserRepository(session).get_by_id(decrypt_sess.get("user_id"))
+    return user_by_session
+
+async def get_user_by_session(request: Request, session: AsyncSession = Depends(db_handler.get_session)):
+    cookie = request.cookies.get(settings.AUTH.SESSION_AUTH_KEY)
+    if not cookie:
+        return None
+    user_by_session = await check_user_session(cookie, session)
     return user_by_session
 
 async def check_anonymous_session(sessions_id, session: AsyncSession):

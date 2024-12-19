@@ -2,32 +2,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.problems.models import Language, Category, Test, Task, Solution
+from api.problems.repository import ProblemsRepository
+from api.users.auth.utils.sessions import get_user_by_session
 from config.db import db_handler
+from api.problems.generate_test_data import router as generate_date_api
 
 router = APIRouter(prefix="/problems", tags=["problems"])
+router.include_router(generate_date_api)
 
-
-@router.get("/generate-languages")
-async def generate_language(session: AsyncSession = Depends(db_handler.get_session)):
-    res = await Language().generate_languages(session)
-    return {"detail": res}
-
-@router.get("/generate-categories")
-async def generate_languages(session: AsyncSession = Depends(db_handler.get_session)):
-    res = await Category().generate_categories(session)
-    return {"detail": res}
-
-@router.get("/generate-tests/{count}")
-async def generate_tests(count: int, session: AsyncSession = Depends(db_handler.get_session)):
-    res = await Test().generate_tests(count, session)
-    return {"detail": res}
-
-@router.get("/generate-tasks/{count}")
-async def generate_tests(count: int, session: AsyncSession = Depends(db_handler.get_session)):
-    res = await Task().generate_tasks(count, session)
-    return {"detail": res}
-
-@router.get("/generate-solutions/{count}")
-async def generate_solutions(count: int, session: AsyncSession = Depends(db_handler.get_session)):
-    res = await Solution().generate_solutions(count, session)
-    return {"detail": res}
+@router.get("/")
+async def problems_list(user=Depends(get_user_by_session), session: AsyncSession = Depends(db_handler.get_session)):
+    data = await ProblemsRepository(session).get_all(user.id)
+    return {"detail": data}
