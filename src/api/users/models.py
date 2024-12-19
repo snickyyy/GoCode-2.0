@@ -1,37 +1,43 @@
-from enum import Enum
-from typing import List, TYPE_CHECKING
-
-from sqlalchemy import String, Enum as SQLAlchemyEnum, Column, Integer
-from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
+from sqlalchemy import String, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
-
+from api.users.auth.utils.utils import make_hash, check_hash
 from core.models import BaseModel
-
-if TYPE_CHECKING:
-    from api.problems.models import Solution
-    from api.forum.models import Post
+from enum import Enum
 
 
 class ROLES(Enum):
-    ANONYMOUS = 0, "anonymous"
-    USER = 1, "user"
-    ADMIN = 2, "admin"
+    ANONYMOUS = 0
+    USER = 1
+    ADMIN = 2
 
-    def __str__(self):
-        return self.name
+    def label(self):
+        return self.name.lower()
+
+    @classmethod
+    def get_value_by_label(cls, label: str):
+        for role in cls:
+            if role.label() == label.lower():
+                return role.value
+        raise ValueError(f"No matching role found for label: {label}")
 
 
 class User(BaseModel):
-    username: Mapped[str] = mapped_column(String(25))
+    username: Mapped[str] = mapped_column(String(25), unique=True)
     password: Mapped[str]
-    email: Mapped[str] = mapped_column(String(180))
+    email: Mapped[str] = mapped_column(String(180), unique=True)
     description: Mapped[str] = mapped_column(String(120), nullable=True)
     role: Mapped[ROLES] = mapped_column(ChoiceType(ROLES, impl=Integer()))
     image: Mapped[str] = mapped_column(nullable=True)
 
-    solutions: Mapped[List["Solution"]] = relationship(
-        "Solution", backref="user", passive_deletes=True
-    )
-    posts: Mapped[List["Post"]] = relationship(
-        "Post", backref="user", passive_deletes=True
-    )
+    from api.problems.models import Solution
+    solutions = relationship("Solution", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
+    from api.forum.models import Post, Comment
+    posts = relationship("Post", back_populates="user", passive_deletes=True)
+    comments = relationship("Comment", back_populates="user", passive_deletes=True)
+
+    def set_password(self, password):
+        self.password = make_hash(password).decode()
+
+    def check_password(self, password):
+        return check_hash(password, self.password)
