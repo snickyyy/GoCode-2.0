@@ -107,7 +107,7 @@ class Task(BaseModel):
     image: Mapped[str]
 
     solutions = relationship("Solution", back_populates="task", passive_deletes=True)
-    category = relationship("Category", back_populates="tasks", passive_deletes=True, uselist=True)
+    category = relationship("Category", back_populates="tasks", passive_deletes=True, lazy="joined")
     test = relationship("Test", back_populates="task", passive_deletes=True)
 
     @classmethod

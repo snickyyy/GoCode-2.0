@@ -1,6 +1,7 @@
 from sqlalchemy import select, and_, func
 from sqlalchemy.sql import case
 from api.problems.models import Task, DIFFICULTLY_CHOICES, Solution
+from api.problems.schemas import TaskDetail
 from api.shared.repository import BaseRepository
 
 
@@ -36,3 +37,9 @@ class ProblemsRepository(BaseRepository):
         )
         result = await self.db.execute(stmt)
         return result.mappings().all()
+
+    async def get_task_details(self, id):
+        task = await self.get_by_id(id)
+        return TaskDetail.model_validate(task)
+
+

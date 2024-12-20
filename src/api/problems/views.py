@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.problems.models import Language, Category, Test, Task, Solution
 from api.problems.repository import ProblemsRepository
 from api.users.auth.utils.sessions import get_user_by_session
 from config.db import db_handler
@@ -14,3 +13,9 @@ router.include_router(generate_date_api)
 async def problems_list(user=Depends(get_user_by_session), session: AsyncSession = Depends(db_handler.get_session)):
     data = await ProblemsRepository(session).get_all(user.id)
     return {"detail": data}
+
+@router.get("/{id}")
+async def problem_detail(id: int, user=Depends(get_user_by_session), session: AsyncSession = Depends(db_handler.get_session)):
+    data = await ProblemsRepository(session).get_task_details(id)
+    return data
+
