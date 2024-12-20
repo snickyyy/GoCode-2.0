@@ -10,7 +10,7 @@ from config.db import db_handler
 
 app = FastAPI()
 
-origins = ["http://127.0.0.1:8000"]
+origins = ["http://127.0.0.1:8000", "http://localhost:8000"]
 
 app.add_middleware(
     CORSMiddleware,

@@ -8,7 +8,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 class DataBase(BaseSettings):
-    DB_URL: str = getenv("DB_URL", f"sqlite+aiosqlite:///{BASE_DIR}/db.sqlite3")
+    DB_URL: str = getenv("DB_URL")
 
 class Authorization(BaseSettings):
     SECRET_KEY: str = getenv("SECRET_KEY")

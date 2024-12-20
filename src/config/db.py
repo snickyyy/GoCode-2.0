@@ -13,7 +13,6 @@ class DbSettings:
     engine = create_async_engine(
         url=settings.DB.DB_URL,
         echo=settings.DEBUG,
-        connect_args={"check_same_thread": False},
     )
 
     session_maker = async_sessionmaker(

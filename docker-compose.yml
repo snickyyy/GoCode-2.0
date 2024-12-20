@@ -1,0 +1,30 @@
+
+
+services:
+  backend:
+    build: ./
+    working_dir: /GoCode
+    ports:
+      - "8000:8000"
+    command:
+      - ./commands/start_server.sh
+    volumes:
+      - ./src:/GoCode/src
+      - ./commands:/GoCode/commands
+      - ./.env:/GoCode/.env
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:16.4
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/Lib/postgresql/data
+    restart: on-failure
+    env_file:
+      - .env
+
+
+volumes:
+  pg_data: { }
