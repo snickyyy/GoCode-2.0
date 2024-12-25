@@ -16,7 +16,7 @@ class BaseRepository:
     async def get_by_id(self, id: int|str):
         query = await self.db.get(self.model, id)
         if not query:
-            raise HTTPException(status_code=404, detail="Object not found")
+            raise HTTPException(status_code=404, detail="Instance does not exist")
         return query
 
     async def list(self, skip: int = 0, limit: int = 100):

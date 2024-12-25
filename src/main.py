@@ -1,14 +1,25 @@
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
 
-from api.users.auth.utils.permissions import check_auth_user
-from api.users.repository import UserRepository
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.shared.middlewares import auth_session
 from api.users.views import router as users_api
 from api.problems.views import router as problems_api
-from config.db import db_handler
+from config.settings import RabbitMQ, settings
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    RabbitMQ.set_queue("TO_TEST_QUEUE", "To-Test")
+    RabbitMQ.set_queue("RESULT_QUEUE", "Result-Test")
+    await RabbitMQ().get_broker().connect()
+    settings.REDIS.set_client("in_waiting", db=0)
+    yield
+    await RabbitMQ().get_broker().close()
+    await settings.REDIS.close_all()
+
+app = FastAPI(lifespan=lifespan)
 
 origins = ["http://127.0.0.1:8000", "http://localhost:8000"]
 
@@ -20,10 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.middleware("http")(auth_session)
+
 app.include_router(users_api)
 app.include_router(problems_api)
-
-
-@app.get("/")
-async def read_root(user=Depends(check_auth_user), session: AsyncSession = Depends(db_handler.get_session)):
-    return await UserRepository(session).list()

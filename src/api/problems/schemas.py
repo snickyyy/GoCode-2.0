@@ -29,3 +29,6 @@ class TaskDetail(BaseModel):
     @classmethod
     def clean_category(cls, value):
         return value.name
+
+class SubmitTask(BaseModel):
+    code: str

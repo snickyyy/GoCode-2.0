@@ -36,8 +36,19 @@ class User(BaseModel):
     posts = relationship("Post", back_populates="user", passive_deletes=True)
     comments = relationship("Comment", back_populates="user", passive_deletes=True)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.is_authenticated = self.role != ROLES.ANONYMOUS
+
+    def authenticate(self):
+        if self.role != ROLES.ANONYMOUS:
+            self.is_authenticated = True
+
     def set_password(self, password):
         self.password = make_hash(password).decode()
+
+    def check_authenticated(self):
+        return self.role != ROLES.ANONYMOUS
 
     def check_password(self, password):
         return check_hash(password, self.password)
