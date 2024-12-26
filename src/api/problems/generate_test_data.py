@@ -30,3 +30,10 @@ async def generate_tests(count: int, session: AsyncSession = Depends(db_handler.
 async def generate_solutions(count: int, session: AsyncSession = Depends(db_handler.get_session)):
     res = await Solution().generate_solutions(count, session)
     return {"detail": res}
+
+@router.get("/generate_all_relationships")
+async def generate_all_relationships(tests_count: int|None=100, tasks_count: int|None=100, solutions_count:int|None=40,session: AsyncSession = Depends(db_handler.get_session)):
+    await Solution().generate_all_relations(session=session,
+                                            tests_count=tests_count,
+                                            tasks_count=tasks_count,
+                                            solutions_count=solutions_count)

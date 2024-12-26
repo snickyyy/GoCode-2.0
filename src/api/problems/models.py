@@ -10,9 +10,6 @@ from sqlalchemy_utils import ChoiceType
 
 from core.models import BaseModel
 
-if TYPE_CHECKING:
-    from api.users.models import User
-
 class DIFFICULTLY_CHOICES(Enum):
     EASY = 1
     MEDIUM = 2
@@ -149,9 +146,13 @@ class Solution(BaseModel):
     async def generate_solutions(cls, count, session: AsyncSession):
         f = Faker("EN")
         all_solutions = []
+        from api.users.models import User
+        user = select(User).limit(15)
+        result_us = await session.execute(user)
+        user_id = result_us.scalars().first().id
         for i in range(count):
             task = cls(
-                user_id=2,
+                user_id=user_id,
                 solution=f.text(max_nb_chars=555),
                 task_id=random.randint(1, count),
                 language_id=random.randint(1, 8),
@@ -164,3 +165,14 @@ class Solution(BaseModel):
         session.add_all(all_solutions)
         await session.commit()
         return all_solutions
+
+    @classmethod
+    async def generate_all_relations(cls, session: AsyncSession,tests_count: int=100, tasks_count: int=100, solutions_count: int=40):
+        # await Category.generate_categories(session=session)
+        # await Language.generate_languages(session=session)
+        await Test.generate_tests(tests_count,session=session)
+        await Task.generate_tasks(tasks_count, session=session)
+        await Solution.generate_solutions(solutions_count, session=session)
+
+
+
