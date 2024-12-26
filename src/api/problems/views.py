@@ -13,8 +13,8 @@ router = APIRouter(prefix="/problems", tags=["problems"])
 router.include_router(generate_date_api)
 
 @router.get("/")
-async def problems_list(request: Request,page: int|None = 1, category: str|None=None, session: AsyncSession = Depends(db_handler.get_session)):
-    data = await ProblemsRepository(session).get_all(request.state.user.id, skip=50*(page-1), limit=50, category=category)
+async def problems_list(request: Request,page: int|None = 1, category: str|None=None, difficulty: str|None = None, session: AsyncSession = Depends(db_handler.get_session)):
+    data = await ProblemsRepository(session).get_all(request.state.user.id, skip=50*(page-1), limit=50, category=category, difficulty=difficulty)
     return {"detail": data}
 
 @router.get("/{id}")
