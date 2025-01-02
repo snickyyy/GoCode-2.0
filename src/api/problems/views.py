@@ -8,6 +8,7 @@ from api.problems.utils.redis_ import check_in_waiting, push_to_waiting
 from api.users.models import ROLES
 from config.db import db_handler
 from api.problems.generate_test_data import router as generate_date_api
+from config.settings import settings
 
 router = APIRouter(prefix="/problems", tags=["problems"])
 router.include_router(generate_date_api)
@@ -26,8 +27,9 @@ async def problem_detail(id: int, session: AsyncSession = Depends(db_handler.get
 async def problem_solution(request: Request, task_id: int, solution: SubmitTask, session: AsyncSession = Depends(db_handler.get_session)):
     if not request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You need to be authenticated to solve problems")
-    if check_in_waiting(request.state.user.id):
+    if await check_in_waiting(request.state.user.id):
+        await settings.REDIS.in_waiting.flushall()
         raise HTTPException(status_code=403, detail="You are already in queue")
-    result = await push_message({"message": "hallo"})
+    result = await push_message({"task_id": task_id, "solution": solution.code, "user_id": request.state.user.id})
     await push_to_waiting(request.state.user.id)
     return result

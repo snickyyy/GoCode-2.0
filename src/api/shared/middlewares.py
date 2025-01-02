@@ -16,6 +16,11 @@ async def auth_session(request: Request, call_next):
         return response
 
     session = await get_session_from_cookie(auth_cookie)
+    if not session:
+        await set_anonymous_user(request)
+        response = await call_next(request)
+        response.delete_cookie(settings.AUTH.SESSION_AUTH_KEY)
+        return response
 
     if session.expires_at <= datetime.now():
         await set_anonymous_user(request)

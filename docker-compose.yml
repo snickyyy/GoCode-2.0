@@ -22,6 +22,7 @@ services:
     container_name: postgres
     ports:
       - "5432:5432"
+      - "15672:15672"
     volumes:
       - pg_data:/var/Lib/postgresql/data
     restart: on-failure
@@ -29,14 +30,16 @@ services:
       - .env
 
   rabbitmq:
-    image: rabbitmq:4.0-alpine
+    image: rabbitmq:4.0-management-alpine
     container_name: rabbitmq
-    env_file:
-      - .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    volumes:
+      - ./commands:/GoCode/commands
     ports:
       - "5672:5672"
-    volumes:
-      - rabbitmq:/var/lib/rabbitmq
+#      - "15672:15672"
     restart: on-failure
 
   redis:
@@ -48,12 +51,29 @@ services:
     depends_on:
       - backend
       - rabbitmq
-    env_file:
-      - .env
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DATABASES=${REDIS_DATABASES}
+#    volumes:
+#      - redis:/var/lib/redis
+
+  testing_control:
+    build: ./testing_control/
+    container_name: testing_control
+    command:
+      - ./testing_control/commands/start_testing_control.sh
+    depends_on:
+      - backend
+      - rabbitmq
+    restart: on-failure
+    working_dir: /GoCode
     volumes:
-      - redis:/var/lib/redis
+      - ./commands:/GoCode/commands
+      - ./testing_control:/GoCode/testing_control
+
 
 volumes:
   pg_data: { }
-  rabbitmq: { }
-  redis: { }
+#  rabbitmq: { }
+#  redis: { }

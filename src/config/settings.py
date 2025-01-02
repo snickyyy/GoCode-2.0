@@ -1,7 +1,9 @@
+import asyncio
 from os import getenv
 from pathlib import Path
 
-from faststream.rabbit import RabbitBroker, RabbitQueue
+from aiormq import AMQPConnectionError
+from faststream.rabbit import RabbitBroker, RabbitQueue, RabbitExchange, ExchangeType
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import redis.asyncio as redis
@@ -14,18 +16,35 @@ class DataBase(BaseSettings):
 
 class RabbitMQ(BaseSettings):
     RABBITMQ_URL: str = getenv("RABBITMQ_URL")
+    # RABBITMQ_USER: str = getenv("RABBITMQ_DEFAULT_USER")
+    # RABBITMQ_PASSWORD: str = getenv("RABBITMQ_DEFAULT_PASS")
+    # RABBITMQ_VHOST: str = getenv("RABBITMQ_DEFAULT_VHOST")
 
+    # RABBITMQ_BROKER: RabbitBroker = RabbitBroker(host="rabbitmq", port=5672, virtualhost=RABBITMQ_VHOST)
     RABBITMQ_BROKER: RabbitBroker = RabbitBroker(RABBITMQ_URL)
 
     @classmethod
-    def set_queue(cls, name_attr: str, rout_key: str, auto_delete: bool =True, **kwargs):
-        setattr(cls, name_attr, RabbitQueue(rout_key, auto_delete, **kwargs))
+    def set_queue(cls, name_attr: str, queue_name: str, auto_delete: bool =True, **kwargs):
+        setattr(cls, name_attr, RabbitQueue(queue_name, auto_delete=auto_delete, **kwargs))
+        return getattr(cls, name_attr)
+
+    @classmethod
+    def set_exchange(cls, name_attr: str, name_exchange: str, type: ExchangeType):
+        setattr(cls, name_attr, RabbitExchange(name=name_exchange, type=type))
+        return getattr(cls, name_attr)
 
     def get_broker(self, name_attr: str = "RABBITMQ_BROKER") -> RabbitBroker:
         if hasattr(self, name_attr):
             return getattr(self, name_attr)
         else:
             raise AttributeError(f"No RabbitMQ broker found with name: {name_attr}")
+
+    async def get_connection(self):
+        while True:
+            try:
+                return await self.get_broker().connect()
+            except AMQPConnectionError as e:
+                await asyncio.sleep(2)
 
 class Redis:
     REDIS_HOST: str = getenv("REDIS_HOST", "redis")
