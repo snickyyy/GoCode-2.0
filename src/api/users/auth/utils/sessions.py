@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from enum import Enum
 
@@ -8,7 +9,10 @@ from api.users.auth.repository import SessionRepository
 from api.users.auth.utils.utils import decrypt_data
 from api.users.models import User
 from api.users.repository import UserRepository
+from logs.config import configure_logs
 
+configure_logs()
+logger = logging.getLogger(__name__)
 
 class SessionsTypes(Enum):
     AUTHENTICATION = "authentication"

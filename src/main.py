@@ -9,9 +9,17 @@ from api.users.views import router as users_api
 from api.problems.views import router as problems_api
 from config.settings import RabbitMQ, settings
 
+from logging import getLogger
+
+from logs.config import configure_logs
+
+configure_logs()
+logger = getLogger(__name__)
+
 
 @asynccontextmanager
 async def rabbitmq_lifespan():
+    logger.info("RabbitMQ connection established")
     rabbit = RabbitMQ()
     await rabbit.get_connection()
     exchange = RabbitMQ.set_exchange("TESTING_EXCHANGE", "testing_system", ExchangeType.DIRECT)
@@ -24,14 +32,17 @@ async def rabbitmq_lifespan():
         yield
     finally:
         await rabbit.get_broker().close()
+        logger.info("RabbitMQ connection closed")
 
 @asynccontextmanager
 async def redis_lifespan():
+    logger.info("Redis connection established")
     settings.REDIS.set_client("in_waiting", db=0)
     try:
         yield
     finally:
         await settings.REDIS.close_all()
+        logger.info("Redis connection closed")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

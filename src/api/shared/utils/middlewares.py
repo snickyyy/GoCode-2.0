@@ -7,7 +7,7 @@ from config.db import db_handler
 
 
 async def set_anonymous_user(request: Request):
-    request.state.user = User(id=0, role=ROLES.ANONYMOUS)
+    request.state.user = User(id=0, role=ROLES.ANONYMOUS, username="unknown")
     request.state.user.is_authenticated = False
 
 async def get_session_from_cookie(cookie_key: str):

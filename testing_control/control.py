@@ -1,64 +1,29 @@
 import importlib
-import pprint
-import time
 import unittest
 
 from RestrictedPython import compile_restricted
 from RestrictedPython.Guards import safe_builtins, guarded_iter_unpack_sequence, full_write_guard
-
-
-
-# source_code = """
-# def main(nums, target):
-#     entryDeg = {}
-#     for index, num in enumerate(nums):
-#         if num in entryDeg:
-#             return entryDeg[num], index
-#         delta = target - num
-#         entryDeg[delta] = index
-# """
-#
-# byte_code = compile_restricted(
-#     source_code,
-#     filename='<string>',
-#     mode='exec'
-# )
-#
-# exec_globals = {
-#     '__builtins__': safe_builtins,
-#     '_getattr_': getattr,
-#     '_setattr_': setattr,
-#
-# }
-# exec_locals = {}
-# exec(byte_code, exec_globals, exec_locals)
-#
-# setattr(TestCase, "main", staticmethod(exec_locals.get("main")))
-#
-# suite = unittest.TestLoader().loadTestsFromTestCase(TestCase)
-# result = unittest.TestResult()
-# suite.run(result)
-# print(result.errors)
+sample = "\ndef main(nums, target):\n    entryDeg = {}\n    for index, num in enumerate(nums):\n        if num in entryDeg:\n            return entryDeg[num], index\n        delta = target - num\n        entryDeg[delta] = index\n        "
 
 class ControllerTest:
     __GLOBALS_VAR = {
         '__builtins__': safe_builtins,
-        '_getattr_': getattr,  # разрешаем getattr
-        '_setattr_': setattr,  # разрешаем setattr
+        '_getattr_': getattr,
+        '_setattr_': setattr,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_getiter_": iter,
-        'enumerate': enumerate,  # Явно разрешаем enumerate
-        'zip': zip,  # Явно разрешаем zip
-        'range': range,  # Явно разрешаем range
-        'len': len,  # Явно разрешаем len
-        'sum': sum,  # Явно разрешаем sum
-        'sorted': sorted,  # Явно разрешаем sorted
-        'map': map,  # Явно разрешаем map
-        'filter': filter,  # Явно разрешаем filter
-        'iter': iter,  # Явно разрешаем iter
-        'next': next,  # Явно разрешаем next
-        'dict': dict,  # Разрешаем работу с словарями
-        'set': set,  # Разрешаем работу с множествами
+        'enumerate': enumerate,
+        'zip': zip,
+        'range': range,
+        'len': len,
+        'sum': sum,
+        'sorted': sorted,
+        'map': map,
+        'filter': filter,
+        'iter': iter,
+        'next': next,
+        'dict': dict,
+        'set': set,
         'list': list,
         'str': str,
         'int': int,

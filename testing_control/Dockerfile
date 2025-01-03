@@ -5,6 +5,6 @@ RUN mkdir /GoCode
 
 WORKDIR /GoCode
 
-RUN python -m pip install --upgrade pip && pip install faststream[rabbit] && pip install pika
+RUN python -m pip install --upgrade pip && pip install faststream[rabbit] && pip install RestrictedPython
 
 CMD ["/bin/sh"]

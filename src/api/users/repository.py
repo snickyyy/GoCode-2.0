@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.shared.repository import BaseRepository
 from api.users.auth.schemas import RegisterUser
-from api.users.auth.utils.utils import make_hash
 from api.users.models import User, ROLES
 
 

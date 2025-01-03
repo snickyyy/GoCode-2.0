@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from os import getenv
 from pathlib import Path
 
@@ -92,6 +93,7 @@ class Email(BaseSettings):
 
 
 class Settings(BaseSettings):
+    LOGS_LEVEL: int = logging.INFO
     DEBUG: bool = True
     HOST: str = getenv("HOST", "127.0.0.1")
     PORT: int = getenv("PORT", 8000)
