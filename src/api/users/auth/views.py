@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.users.auth.schemas import RegisterUser, LoginUser
 from api.users.auth.services.email import send_email
+
+from api.users.auth.service import AuthService
 from api.users.auth.utils.sessions import create_session, SessionsTypes, check_email_session
 from api.users.models import User, ROLES
 from api.users.repository import UserRepository
@@ -19,7 +21,7 @@ async def register(request: Request, schema: RegisterUser, session: AsyncSession
     if request.state.user.is_authenticated:
         raise HTTPException(status_code=403, detail="You are already authenticated")
 
-    user = await UserRepository(session).create(schema=schema)
+    user = await AuthService(UserRepository(session)).create_user(schema)
     token = await create_session(
         user_obj=user,
         sess_type=SessionsTypes.AUTHENTICATION,
@@ -44,9 +46,7 @@ async def activate_account(request: Request, token, session: AsyncSession = Depe
 
 @router.post("/login")
 async def login(request: Request, response: Response, schema: LoginUser, session: AsyncSession = Depends(db_handler.get_session)):
-    user = await UserRepository(session).get_by_username_or_email(schema.username_or_email)
-    if not user or not user.check_password(schema.password) or not user.check_authenticated():
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    user = await AuthService(UserRepository(session)).authorize(schema.username_or_email, schema.password)
 
     cookies = await create_session(user_obj=user,
                                  sess_type=SessionsTypes.AUTHORIZATION,

@@ -1,6 +1,8 @@
-import re
+from pydantic import BaseModel, EmailStr, field_validator,PrivateAttr, Field
+from pydantic.json_schema import SkipJsonSchema
 
-from pydantic import BaseModel, EmailStr, field_validator
+from api.users.auth.utils.utils import make_hash
+from api.users.models import ROLES
 
 
 class RegisterUser(BaseModel):
@@ -24,8 +26,16 @@ class RegisterUser(BaseModel):
     #         raise ValueError("Username can only contain English letters, digits, underscores (_), and dots (.)")
     #     return value
 
+    @field_validator('password', mode='after')
+    @classmethod
+    def hashing_password(cls, value: str) -> str:
+        return make_hash(value).decode()
+
+
 class LoginUser(BaseModel):
     username_or_email: str
     password: str
 
-
+class UserFilter(BaseModel):
+    username: str | None = None
+    email: str | None = None

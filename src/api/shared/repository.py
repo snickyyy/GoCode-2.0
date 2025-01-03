@@ -31,6 +31,7 @@ class BaseRepository:
         return result.scalars().all()
 
     async def create(self, schema):
+        logger.debug("%s",schema)
         obj = self.model(**schema.model_dump())
         try:
             self.db.add(obj)
@@ -45,7 +46,7 @@ class BaseRepository:
         obj = await self.get_by_id(id)
         if not obj:
             raise HTTPException(status_code=404, detail="Object not found")
-        for key, value in schema.model_dump():
+        for key, value in schema.model_dump().items():
             setattr(obj, key, value)
         await self.db.commit()
         logger.debug("Update %s object <%s>", obj.id,str(self.model))
@@ -69,7 +70,7 @@ class BaseRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def non_strict_filter(self, schema, skip: int = 0, limit: int = 100):
+    async def non_strict_filter(self, schema,  skip: int = 0, limit: int = 100):
         stmt = select(self.model).filter(
             or_(
                 *[getattr(self.model, key) == value for key, value in schema.model_dump(exclude_unset=True).items()]
