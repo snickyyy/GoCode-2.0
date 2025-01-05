@@ -1,9 +1,6 @@
-from typing import Any
-
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 from sqlalchemy.sql import case
-from api.problems.models import Task, DIFFICULTLY_CHOICES, Solution, Category
-from api.problems.schemas import TaskDetail
+from api.problems.models import Task, Solution, Category, Language
 from api.shared.repository import BaseRepository
 
 
@@ -49,6 +46,19 @@ class ProblemsRepository(BaseRepository):
         result = await self.db.execute(stmt)
         return result.mappings().all()
 
-    async def get_task_details(self, id):
-        task = await self.get_by_id(id)
-        return TaskDetail.model_validate(task)
+class CategoryRepository(BaseRepository):
+    model = Category
+
+    async def get_all(self, sort=True):
+        if sort:
+            stmt = select(self.model.name).order_by(self.model.name)
+        else:
+            stmt = select(self.model.name)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+class LanguageRepository(BaseRepository):
+    model = Language
+
+class SolutionRepository(BaseRepository):
+    model = Solution

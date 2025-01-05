@@ -17,11 +17,6 @@ class DataBase(BaseSettings):
 
 class RabbitMQ(BaseSettings):
     RABBITMQ_URL: str = getenv("RABBITMQ_URL")
-    # RABBITMQ_USER: str = getenv("RABBITMQ_DEFAULT_USER")
-    # RABBITMQ_PASSWORD: str = getenv("RABBITMQ_DEFAULT_PASS")
-    # RABBITMQ_VHOST: str = getenv("RABBITMQ_DEFAULT_VHOST")
-
-    # RABBITMQ_BROKER: RabbitBroker = RabbitBroker(host="rabbitmq", port=5672, virtualhost=RABBITMQ_VHOST)
     RABBITMQ_BROKER: RabbitBroker = RabbitBroker(RABBITMQ_URL)
 
     @classmethod
@@ -85,7 +80,7 @@ class Email(BaseSettings):
     MAIL_FROM: str = getenv("MAIL_FROM"),
     MAIL_PORT: int = getenv("MAIL_PORT"),
     MAIL_SERVER: str = getenv("MAIL_SERVER"),
-    MAIL_FROM_NAME: str = "GoCode registering"
+    MAIL_FROM_NAME: str = "GoCode"
     MAIL_STARTTLS: bool = True
     MAIL_SSL_TLS: bool = False
     USE_CREDENTIALS: bool = True
@@ -97,6 +92,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     HOST: str = getenv("HOST", "127.0.0.1")
     PORT: int = getenv("PORT", 8000)
+    PAGE_SIZE: int = 25
 
     DB: DataBase = DataBase()
 

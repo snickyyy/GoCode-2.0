@@ -18,7 +18,7 @@ router = APIRouter(prefix="/auth")
 
 @router.post("/register")
 async def register(request: Request, schema: RegisterUser, session: AsyncSession = Depends(db_handler.get_session)):
-    if request.state.user.is_authenticated:
+    if request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You are already authenticated")
 
     user = await AuthService(UserRepository(session)).create_user(schema)

@@ -1,8 +1,6 @@
 from fastapi import HTTPException
 from pydantic import EmailStr
 from pydantic_core import PydanticCustomError
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.shared.repository import BaseRepository
 from api.users.auth.schemas import RegisterUser, UserFilter

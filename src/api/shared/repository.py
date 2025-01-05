@@ -1,7 +1,7 @@
 import logging
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -78,3 +78,8 @@ class BaseRepository:
         ).offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    async def count_all(self):
+        stmt = select(func.count(self.model.id))
+        result = await self.db.scalar(stmt)
+        return result

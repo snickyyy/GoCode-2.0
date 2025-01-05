@@ -22,12 +22,14 @@ async def rabbitmq_lifespan():
     logger.info("RabbitMQ connection established")
     rabbit = RabbitMQ()
     await rabbit.get_connection()
-    exchange = RabbitMQ.set_exchange("TESTING_EXCHANGE", "testing_system", ExchangeType.DIRECT)
-    await rabbit.get_broker().declare_exchange(exchange)
+    push_exchange = RabbitMQ.set_exchange("PUSH_EXCHANGE", "push", ExchangeType.DIRECT)
+    pull_exchange = RabbitMQ.set_exchange("PUll_EXCHANGE", "pull", ExchangeType.DIRECT)
+    await rabbit.get_broker().declare_exchange(push_exchange)
+    await rabbit.get_broker().declare_exchange(pull_exchange)
     queue = RabbitMQ.set_queue("TESTING", "Testing")
     testing_queue = await rabbit.get_broker().declare_queue(queue)
-    await testing_queue.bind(exchange="testing_system", routing_key="push")
-    await testing_queue.bind(exchange="testing_system", routing_key="pull")
+    await testing_queue.bind(exchange="push", routing_key="push")
+    await testing_queue.bind(exchange="pull")
     try:
         yield
     finally:

@@ -1,5 +1,6 @@
 from enum import Enum
 import random
+from random import choice
 from typing import List, TYPE_CHECKING
 
 from faker import Faker
@@ -149,13 +150,16 @@ class Solution(BaseModel):
         from api.users.models import User
         user = select(User).limit(15)
         result_us = await session.execute(user)
-        user_id = result_us.scalars().first().id
+        user_id = choice(result_us.scalars().all()).id
+        language = await session.execute(select(Language))
+        choice_language = choice(language.scalars().all()).id
+
         for i in range(count):
             task = cls(
                 user_id=user_id,
                 solution=f.text(max_nb_chars=555),
-                task_id=random.randint(1, count),
-                language_id=random.randint(1, 8),
+                task_id=random.randint(1,1),
+                language_id=choice_language,
                 status=random.choice([TASK_STATUS_CHOICES.ACCEPTED, TASK_STATUS_CHOICES.IN_DEVELOPMENT]),
                 time=random.randint(10,1000),
                 memory=random.randint(1,25),

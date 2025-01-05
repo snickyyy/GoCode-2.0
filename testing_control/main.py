@@ -10,12 +10,13 @@ broker = RabbitBroker(url="amqp://admin:admin@rabbitmq:5672")
 app = FastStream(broker)
 test_controller = ControllerTest()
 
-@broker.subscriber(RabbitQueue("Testing", auto_delete=True), exchange="testing_system")
+@broker.subscriber(RabbitQueue("Testing", auto_delete=True, routing_key="push"), exchange="push")
 async def process_message(msg: str):
     decode = json.loads(msg)
     test_name = f"task_{decode.get('task_id')}"
-    result = test_controller.check_solution(decode.get("solution"), test_name)
-    print(result)
+    test_result = test_controller.check_solution(decode.get("solution"), test_name)
+    message = ...
+    print(test_result)
 
 async def main():
     await app.run()

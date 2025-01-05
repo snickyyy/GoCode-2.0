@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.problems.repository import ProblemsRepository
+from api.problems.repository import ProblemsRepository, CategoryRepository, LanguageRepository, SolutionRepository
 from api.problems.schemas import SubmitTask
+from api.problems.service import ProblemsService
 from api.problems.utils.rabbitmq import push_message
 from api.problems.utils.redis_ import check_in_waiting, push_to_waiting
+from api.shared.utils.pagination import Pagination
 from api.users.models import ROLES
 from config.db import db_handler
 from api.problems.generate_test_data import router as generate_date_api
@@ -15,12 +17,46 @@ router.include_router(generate_date_api)
 
 @router.get("/")
 async def problems_list(request: Request,page: int|None = 1, category: str|None=None, difficulty: str|None = None, session: AsyncSession = Depends(db_handler.get_session)):
-    data = await ProblemsRepository(session).get_all(request.state.user.id, skip=50*(page-1), limit=50, category=category, difficulty=difficulty)
-    return {"detail": data}
+    service = ProblemsService(
+        ProblemsRepository(session),
+        CategoryRepository(session),
+        LanguageRepository(session),
+        SolutionRepository(session)
+    )
+    total_tasks = await service.get_total_tasks()
+    pagination = Pagination(total_tasks, settings.PAGE_SIZE)
+    offset, limit = pagination.get_offset_and_limit(page)
+    tasks = await service.get_list_tasks(
+        request.state.user.id,
+        skip=offset,
+        limit=limit,
+        category=category,
+        difficulty=difficulty
+    )
+    return {"detail":
+                {
+                    "tasks": {
+                        "data": tasks,
+                        "total": total_tasks
+                    },
+                    "filters": {
+                        "categories": await service.get_all_categories(),
+                        "difficulties": service.get_all_difficulty()
+                    },
+                    "pagination": {
+                        "current_page": page,
+                        "total_pages": pagination.total_pages,
+                        "has_next": pagination.has_next(page),
+                        "has_previous": pagination.has_previous(page),
+                        "next_page": pagination.next_page(page),
+                        "previous_page": pagination.previous_page(page)
+                    }
+                }
+            }
 
 @router.get("/{id}")
 async def problem_detail(id: int, session: AsyncSession = Depends(db_handler.get_session)):
-    data = await ProblemsRepository(session).get_task_details(id)
+    data = await ProblemsService(ProblemsRepository(session)).get_task_details(id)
     return data
 
 @router.post("/{task_id}/solution")
@@ -30,6 +66,5 @@ async def problem_solution(request: Request, task_id: int, solution: SubmitTask,
     if await check_in_waiting(request.state.user.id):
         await settings.REDIS.in_waiting.flushall()
         raise HTTPException(status_code=403, detail="You are already in queue")
-    result = await push_message({"task_id": task_id, "solution": solution.code, "user_id": request.state.user.id})
-    await push_to_waiting(request.state.user.id)
-    return result
+    await ProblemsService.push_to_test(user_id=request.state.user.id, solution=solution.code, task_id=task_id)
+    return {"detail": "success"}
