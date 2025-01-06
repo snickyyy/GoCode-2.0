@@ -30,12 +30,12 @@ class Pagination:
 
     @property
     def total_pages(self):
-        return math.ceil(self.total_items / self.page_size)
+        return math.ceil(self.total_items / self.page_size) if math.ceil(self.total_items / self.page_size) else 1
 
     def validate_page(self, page: int):
         if not isinstance(page, int) or page <= 0:
             raise HTTPException(status_code=409, detail="Page must be a positive integer")
-        elif page > self.total_pages:
+        elif page > self.total_pages and page != 1:
             raise HTTPException(status_code=404, detail="Not Found")
 
     @staticmethod
