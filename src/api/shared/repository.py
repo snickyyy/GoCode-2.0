@@ -20,7 +20,7 @@ class BaseRepository:
         query = await self.db.get(self.model, id)
         if not query:
             logger.debug("ERROR: Instance does not exist ()", str(self.model))
-            raise HTTPException(status_code=404, detail="Instance does not exist")
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} does not exist")
         logger.debug("Get query %s from model %s", query.id, str(self.model))
         return query
 
@@ -37,7 +37,7 @@ class BaseRepository:
             self.db.add(obj)
             await self.db.commit()
         except IntegrityError:
-            raise HTTPException(status_code=409, detail="Data must be unique")
+            raise HTTPException(status_code=409, detail=f"{self.model.__name__} must be unique")
         logger.debug("Create %s object", str(self.model))
         return obj
 
@@ -45,7 +45,7 @@ class BaseRepository:
     async def update(self, id, schema: BaseModel):
         obj = await self.get_by_id(id)
         if not obj:
-            raise HTTPException(status_code=404, detail="Object not found")
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} not found")
         for key, value in schema.model_dump().items():
             setattr(obj, key, value)
         await self.db.commit()
@@ -55,7 +55,7 @@ class BaseRepository:
     async def delete(self, id: int):
         obj = await self.get_by_id(id)
         if not obj:
-            raise HTTPException(status_code=404, detail="Object not found")
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} not found")
         await self.db.delete(obj)
         await self.db.commit()
         logger.debug("Update %s object <%s>", obj.id, str(self.model))

@@ -11,11 +11,3 @@ logger = logging.getLogger(__name__)
 
 class SessionRepository(BaseRepository):
     model = Session
-
-    async def create(self, payload: dict, exp: datetime):
-        _encrypt_payload = encrypt_data(payload)
-        session = self.model(data=_encrypt_payload, expires_at=exp)
-        self.db.add(session)
-        await self.db.commit()
-        logger.debug("Created session <%s>", session.id)
-        return session.id

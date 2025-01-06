@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, field_validator,PrivateAttr, Field
 from pydantic.json_schema import SkipJsonSchema
 
@@ -39,3 +41,7 @@ class LoginUser(BaseModel):
 class UserFilter(BaseModel):
     username: str | None = None
     email: str | None = None
+
+class CreateSession(BaseModel):
+    data: str
+    expires_at: datetime

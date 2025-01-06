@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.users.auth.repository import SessionRepository
 from api.users.auth.schemas import RegisterUser, LoginUser
 from api.users.auth.services.email import send_email
 
@@ -20,13 +21,13 @@ router = APIRouter(prefix="/auth")
 async def register(request: Request, schema: RegisterUser, session: AsyncSession = Depends(db_handler.get_session)):
     if request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You are already authenticated")
+    service = AuthService(UserRepository(session), SessionRepository(session))
 
-    user = await AuthService(UserRepository(session)).create_user(schema)
-    token = await create_session(
+    user = await service.create_user(schema)
+    token = await service.create_session(
         user_obj=user,
         sess_type=SessionsTypes.AUTHENTICATION,
-        exp=datetime.now() + timedelta(seconds=settings.AUTH.EMEIL_CONFIRM_TIME_SEC),
-        session=session
+        exp=datetime.now() + timedelta(seconds=settings.AUTH.EMEIL_CONFIRM_TIME_SEC)
     )
     await send_email(email=schema.email, username=schema.username, token=token)
     return {"detail": "an email has been sent"}
@@ -46,12 +47,16 @@ async def activate_account(request: Request, token, session: AsyncSession = Depe
 
 @router.post("/login")
 async def login(request: Request, response: Response, schema: LoginUser, session: AsyncSession = Depends(db_handler.get_session)):
-    user = await AuthService(UserRepository(session)).authorize(schema.username_or_email, schema.password)
+    if request.state.user.is_authenticated:
+        raise HTTPException(status_code=403, detail="You are already authenticated")
+    service = AuthService(UserRepository(session), SessionRepository(session))
+    user = await service.authorize(schema.username_or_email, schema.password)
 
-    cookies = await create_session(user_obj=user,
-                                 sess_type=SessionsTypes.AUTHORIZATION,
-                                 exp=datetime.now() + timedelta(seconds=settings.AUTH.SESSION_DURATION_SEC),
-                                 session=session)
+    cookies = await service.create_session(
+        user_obj=user,
+        sess_type=SessionsTypes.AUTHORIZATION,
+        exp=datetime.now() + timedelta(seconds=settings.AUTH.SESSION_DURATION_SEC)
+    )
     response.set_cookie(
         key=settings.AUTH.SESSION_AUTH_KEY,
         value=cookies,
