@@ -3,13 +3,11 @@ from datetime import datetime
 from fastapi import HTTPException
 from pydantic import EmailStr
 from pydantic_core import PydanticCustomError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.shared.repository import BaseRepository
-from api.users.auth.repository import SessionRepository
 from api.users.auth.schemas import RegisterUser, UserFilter, CreateSession
 from api.users.auth.utils.sessions import SessionsTypes
-from api.users.auth.utils.utils import encrypt_data
+from api.users.auth.utils.utils import encrypt_data, decrypt_data
 from api.users.models import ROLES, User
 from api.users.schemas import CreateUser, UpdateUser
 
@@ -58,3 +56,16 @@ class AuthService:
         schema = CreateSession(data=_encrypt_payload, expires_at=exp)
         sess_id = await self.session_repository.create(schema)
         return sess_id
+
+    async def check_email_session(self, sessions_id) -> User | bool:
+        session_obj = await self.session_repository.get_by_id(id=sessions_id)
+        if session_obj.expires_at <= datetime.now():
+            return False
+
+        _decrypt_session: dict = decrypt_data(session_obj.data)
+        if not _decrypt_session.get("session_type") or _decrypt_session.get(
+                "session_type") != SessionsTypes.AUTHENTICATION.value:
+            return False
+
+        user = await self.user_repository.get_by_id(_decrypt_session.get("user_id"))
+        return user

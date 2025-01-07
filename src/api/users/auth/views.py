@@ -8,7 +8,7 @@ from api.users.auth.schemas import RegisterUser, LoginUser
 from api.users.auth.services.email import send_email
 
 from api.users.auth.service import AuthService
-from api.users.auth.utils.sessions import create_session, SessionsTypes, check_email_session
+from api.users.auth.utils.sessions import SessionsTypes, check_email_session
 from api.users.models import User, ROLES
 from api.users.repository import UserRepository
 
@@ -34,15 +34,13 @@ async def register(request: Request, schema: RegisterUser, session: AsyncSession
 
 @router.get("/activate-account/{token}")
 async def activate_account(request: Request, token, session: AsyncSession = Depends(db_handler.get_session)):
+    service = AuthService(UserRepository(session), SessionRepository(session))
     if request.state.user.is_authenticated:
         raise HTTPException(status_code=403, detail="You are already authenticated")
-    user: User = await check_email_session(token, session=session)
+    user: User = await service.check_email_session(token)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user.role = ROLES.USER
-    session.add(user)
-    await session.commit()
-    user.authenticate()
+    service.authorize()
     return {"detail": "your account has been activated, now you need to log in"}
 
 @router.post("/login")
