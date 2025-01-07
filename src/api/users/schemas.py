@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from api.users.models import ROLES
 
@@ -22,6 +22,4 @@ class CreateUser(BaseModel):
 
 class UpdateUser(CreateUser):
     ...
-
-    class Config:
-        from_attributes=True
+    model_config = ConfigDict(from_attributes=True)
