@@ -12,6 +12,7 @@ env:
   MAIL_PORT: ${{ secrets.MAIL_PORT }}
   MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
   DB_URL: ${{ secrets.DB_URL }}
+  RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
 
 jobs:
   tests:

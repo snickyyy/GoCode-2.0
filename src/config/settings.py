@@ -48,7 +48,7 @@ class RabbitMQ(BaseSettings):
 
 class Redis:
     REDIS_HOST: str = getenv("REDIS_HOST", "redis")
-    REDIS_PORT: int = getenv("REDIS_PORT")
+    REDIS_PORT: int = getenv("REDIS_PORT", 6379)
     REDIS_PASSWORD: str = getenv("REDIS_PASSWORD")
 
     problems_namespace: Problems = Problems()
