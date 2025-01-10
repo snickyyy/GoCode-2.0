@@ -11,6 +11,7 @@ env:
   MAIL_FROM: ${{ secrets.MAIL_FROM }}
   MAIL_PORT: ${{ secrets.MAIL_PORT }}
   MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+  DB_URL: ${{ secrets.DB_URL }}
 
 jobs:
   tests:
