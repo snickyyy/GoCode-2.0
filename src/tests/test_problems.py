@@ -1,10 +1,4 @@
 import pytest
-from faker import Faker
-from starlette.testclient import TestClient
-
-from api.problems.models import Test, Task
-from config.settings import settings
-from main import app
 from tests.utils.db_operations import create_category, create_tests, create_tasks
 
 @pytest.mark.asyncio

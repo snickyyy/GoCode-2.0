@@ -15,6 +15,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class DataBase(BaseSettings):
     DB_URL: str = getenv("DB_URL")
 
+class Problems(BaseSettings):
+    IN_SUBMIT_WAITING_NAME: str = "in_wait"
+    TESTING_RESULTS_NAME: str = "tests_results"
+
 class RabbitMQ(BaseSettings):
     RABBITMQ_URL: str = getenv("RABBITMQ_URL")
     RABBITMQ_BROKER: RabbitBroker = RabbitBroker(RABBITMQ_URL)
@@ -46,6 +50,9 @@ class Redis:
     REDIS_HOST: str = getenv("REDIS_HOST", "redis")
     REDIS_PORT: int = getenv("REDIS_PORT")
     REDIS_PASSWORD: str = getenv("REDIS_PASSWORD")
+
+    problems_namespace: Problems = Problems()
+    testing_system: redis.Redis | None = None
 
     def set_client(self, attr_name: str, db: int = 0, **kwargs):
         setattr(

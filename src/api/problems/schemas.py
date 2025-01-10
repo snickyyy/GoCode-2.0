@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator, root_validator, ConfigDict, validator, field_validator
 
-from api.problems.models import DIFFICULTLY_CHOICES
+from api.problems.models import DIFFICULTLY_CHOICES, TASK_STATUS_CHOICES
 
 
 class TaskList(BaseModel):
@@ -32,3 +32,29 @@ class TaskDetail(BaseModel):
 
 class SubmitTask(BaseModel):
     code: str
+    language: str
+
+    @field_validator("language", mode="after")
+    @classmethod
+    def clean_language(cls, value: str):
+        return value.capitalize()
+
+class SolutionFilter(BaseModel):
+    task_id: int
+    user_id: int
+    language_id: int
+
+class UpdateSolution(BaseModel):
+    solution: str
+    status: TASK_STATUS_CHOICES
+    time: int
+    memory: int
+    test_passed: int
+
+class CreateSolution(UpdateSolution):
+    user_id: int
+    task_id: int
+    language_id: int
+
+class LanguageFilter(BaseModel):
+    name: str

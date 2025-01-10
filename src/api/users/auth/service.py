@@ -34,9 +34,9 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         return result[0]
 
-    async def authorize(self, username, password):
+    async def authorize(self, username):
         user = await self.get_by_username_or_email(username)
-        if user.check_password(password) and user.role != ROLES.ANONYMOUS:
+        if user.role == ROLES.ANONYMOUS:
             user.role = ROLES.USER
             user_schema = UpdateUser.from_orm(user)
             await self.user_repository.update(user.id, user_schema)
@@ -54,8 +54,8 @@ class AuthService:
             }
         _encrypt_payload = encrypt_data(payload)
         schema = CreateSession(data=_encrypt_payload, expires_at=exp)
-        sess_id = await self.session_repository.create(schema)
-        return sess_id
+        session = await self.session_repository.create(schema)
+        return session.id
 
     async def check_email_session(self, sessions_id) -> User | bool:
         session_obj = await self.session_repository.get_by_id(id=sessions_id)

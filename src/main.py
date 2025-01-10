@@ -39,7 +39,7 @@ async def rabbitmq_lifespan():
 @asynccontextmanager
 async def redis_lifespan():
     logger.info("Redis connection established")
-    settings.REDIS.set_client("in_waiting", db=0)
+    settings.REDIS.set_client("testing_system", db=0)
     try:
         yield
     finally:

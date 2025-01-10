@@ -35,20 +35,22 @@ async def register(request: Request, schema: RegisterUser, session: AsyncSession
 @router.get("/activate-account/{token}")
 async def activate_account(request: Request, token, session: AsyncSession = Depends(db_handler.get_session)):
     service = AuthService(UserRepository(session), SessionRepository(session))
-    if request.state.user.is_authenticated:
+    if request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You are already authenticated")
     user: User = await service.check_email_session(token)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid token")
-    service.authorize()
+    await service.authorize(user.username)
     return {"detail": "your account has been activated, now you need to log in"}
 
 @router.post("/login")
 async def login(request: Request, response: Response, schema: LoginUser, session: AsyncSession = Depends(db_handler.get_session)):
-    if request.state.user.is_authenticated:
+    if request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You are already authenticated")
     service = AuthService(UserRepository(session), SessionRepository(session))
-    user = await service.authorize(schema.username_or_email, schema.password)
+    user = await service.get_by_username_or_email(schema.username_or_email)
+    if not user.check_password(schema.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     cookies = await service.create_session(
         user_obj=user,

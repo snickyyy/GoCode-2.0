@@ -1,13 +1,13 @@
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.problems.repository import ProblemsRepository, CategoryRepository, LanguageRepository, SolutionRepository
-from api.problems.schemas import SubmitTask
+from api.problems.schemas import SubmitTask, LanguageFilter
 from api.problems.service import ProblemsService
-from api.problems.utils.rabbitmq import push_message
-from api.problems.utils.redis_ import check_in_waiting, push_to_waiting
+from api.problems.utils.redis_ import check_in_waiting
 from api.shared.utils.pagination import Pagination
-from api.users.models import ROLES
 from config.db import db_handler
 from api.problems.generate_test_data import router as generate_date_api
 from config.settings import settings
@@ -64,7 +64,24 @@ async def problem_solution(request: Request, task_id: int, solution: SubmitTask,
     if not request.state.user.check_authenticated():
         raise HTTPException(status_code=403, detail="You need to be authenticated to solve problems")
     if await check_in_waiting(request.state.user.id):
-        await settings.REDIS.in_waiting.flushall()
         raise HTTPException(status_code=403, detail="You are already in queue")
+    if len(solution.code) > 1445:
+        raise HTTPException(status_code=409, detail="Maximum length of solution - 1445")
+    service = ProblemsService(
+        ProblemsRepository(session),
+        solution_repository=SolutionRepository(session),
+        language_repository=LanguageRepository(session)
+    )
+    language_filter_schema = LanguageFilter(name=solution.language)
+    language_id = await service.language_repository.strict_filter(language_filter_schema, limit=1)
+    if not language_id:
+        raise HTTPException(status_code=404, detail="Language not found")
+
+    start = time.perf_counter()
     await ProblemsService.push_to_test(user_id=request.state.user.id, solution=solution.code, task_id=task_id)
-    return {"detail": "success"}
+    test_result = await ProblemsService.get_test_result(result_key=request.state.user.id)
+    testing_time = time.perf_counter() - start
+
+    await service.write_solution(user_id=request.state.user.id, task_id=task_id, language_id=language_id[0].id, test_result=test_result)
+
+    return {"detail": test_result, "testing_time": testing_time}

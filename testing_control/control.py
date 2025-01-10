@@ -1,4 +1,5 @@
 import importlib
+import re
 import unittest
 
 from RestrictedPython import compile_restricted
@@ -54,25 +55,18 @@ class ControllerTest:
     def get_sample_answer(self):
         return self.__BODY_ANSWER.copy()
 
-    def _compile_code(self, code):
-        try:
-            byte_code = compile_restricted(
-                code,
-                filename='<string>',
-                mode='exec'
-            )
-            return byte_code, True
-        except Exception as e:
-            response = self.get_sample_answer
-            response.update({"errors": [str(e)], "status": False, "solution": code})
-            return response, False
-
     def check_solution(self, source_code: str, test_name: str):
         test_case = importlib.import_module(f"tests.task.{test_name}").TestCase
-        body, success = self._compile_code(source_code)
-        if not success:
-            return body
-        exec(body, self.get_globals, self.__locals)
+        try:
+            byte_code = compile_restricted(
+                source_code,
+                filename='<string>',
+                mode='exec')
+            exec(byte_code, self.get_globals, self.__locals)
+        except Exception as e:
+            response = self.get_sample_answer
+            response.update({"errors": [str(e)], "status": False, "solution": source_code})
+            return response
         setattr(test_case, "main", staticmethod(self.__locals.get("main")))
         suite = unittest.TestLoader().loadTestsFromTestCase(test_case)
         result = unittest.TestResult()
@@ -81,12 +75,21 @@ class ControllerTest:
         self.__locals.clear()
 
         response = self.get_sample_answer
-
         response.update({
-            "test_passed": len(result.failures),
+            "test_passed": result.testsRun - len(result.failures),
+            "count_tests": result.testsRun,
             "status": len(result.failures) == 0 and len(result.errors) == 0,
             "solution": source_code,
-            "errors": result.errors
         })
+        if not result.errors:
+            response["errors"] = result.failures[0][-1] if len(result.failures) < 2 else result.failures[-1][-1]
+            return response
+
+        error = result.errors[-1][-1] if len(result.errors) > 1 else result.errors[-1]
+        match = re.search(r"^\w+Error: .+$", error, re.MULTILINE)
+
+        if match:
+            response["errors"] = [match.group(0)]
+        else: response["errors"] = result.errors
 
         return response
