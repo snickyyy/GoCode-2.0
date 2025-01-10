@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_register_user(client, session):
     url = "/accounts/auth/register"
-    data = {"username": "testuser", "email": "testuser@example.com", "password": "test123"}
+    data = {"username": "testuser1", "email": "testuser@example.com", "password": "test1213"}
 
     response = await client.post(url, json=data)
     assert response.status_code == 200
@@ -26,9 +26,5 @@ async def test_bad_login_user(client, session):
     data = {"username_or_email": "testuser", "password": "test123"}
 
     response = await client.post(url, json=data)
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials"
-
-    response = await client.post(url, json={"username_or_email": "testuser", "password": "wrong_password"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid credentials"

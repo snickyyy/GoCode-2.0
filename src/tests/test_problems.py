@@ -31,7 +31,7 @@ async def test_get_problems(client, session):
 @pytest.mark.asyncio
 async def test_submit_solution_without_login(client, session):
     url = "/problems/1/solution"
-    data = {"code": "print('Hello, World!')"}
+    data = {"code": "print('Hello, World!')", "language": "python"}
     response = await client.post(url, json=data)
-    assert response.status_code == 403
+    assert response.status_code == 401
     assert response.json()["detail"] == "You need to be authenticated to solve problems"

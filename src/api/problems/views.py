@@ -62,7 +62,7 @@ async def problem_detail(id: int, session: AsyncSession = Depends(db_handler.get
 @router.post("/{task_id}/solution")
 async def problem_solution(request: Request, task_id: int, solution: SubmitTask, session: AsyncSession = Depends(db_handler.get_session)):
     if not request.state.user.check_authenticated():
-        raise HTTPException(status_code=403, detail="You need to be authenticated to solve problems")
+        raise HTTPException(status_code=401, detail="You need to be authenticated to solve problems")
     if await check_in_waiting(request.state.user.id):
         raise HTTPException(status_code=403, detail="You are already in queue")
     if len(solution.code) > 1445:
