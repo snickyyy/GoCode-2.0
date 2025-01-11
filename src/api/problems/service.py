@@ -75,7 +75,7 @@ class ProblemsService:
         return obj
 
     @staticmethod
-    async def get_test_result(result_key: str|int, polling_rate_sec: int = 1, connection_attempts: int = 10) -> dict:
+    async def get_test_result(result_key: str|int, polling_rate_sec: int = 0.05, connection_attempts: int = 10000) -> dict:
         count_attempts = 0
 
         while count_attempts != connection_attempts:

@@ -82,7 +82,12 @@ class ControllerTest:
             "solution": source_code,
         })
         if not result.errors:
-            response["errors"] = result.failures[0][-1] if len(result.failures) < 2 else result.failures[-1][-1]
+            if not result.failures:
+                response["errors"] = []
+            elif len(result.failures) == 1:
+                response["errors"] = [result.failures[0][-1]]
+            else:
+                response["errors"] = result.failures[-1][-1]
             return response
 
         error = result.errors[-1][-1] if len(result.errors) > 1 else result.errors[-1]
