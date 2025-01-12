@@ -1,14 +1,13 @@
 from enum import Enum
 import random
 from random import choice
-from typing import List, TYPE_CHECKING
 
 from faker import Faker
 from sqlalchemy import String, ForeignKey, Integer, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column, relationship, Mapper
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
+from config.db import db_handler
 from core.models import BaseModel
 
 class DIFFICULTLY_CHOICES(Enum):
@@ -51,12 +50,12 @@ class Category(BaseModel):
     tasks = relationship("Task", back_populates="category", passive_deletes=True)
 
     @classmethod
-    async def generate_categories(cls, session):
+    async def generate_categories(cls):
         choices = ["Math", "DataBase", "Algorithms"]
         categories = [cls(name=name) for name in choices]
-        session.add_all(categories)
-        await session.commit()
-
+        async with db_handler.get_session_context() as session:
+            session.add_all(categories)
+            await session.commit()
         return categories
 
 
@@ -66,11 +65,12 @@ class Language(BaseModel):
     solutions = relationship("Solution", back_populates="language", passive_deletes=True)
 
     @classmethod
-    async def generate_languages(cls, session):
+    async def generate_languages(cls):
         choices = ["Python", "Java", "JavaScript", "C++", "C#", "C", "PHP", "Rust"]
         languages = [cls(name=name) for name in choices]
-        session.add_all(languages)
-        await session.commit()
+        async with db_handler.get_session_context() as session:
+            session.add_all(languages)
+            await session.commit()
 
         return languages
 
@@ -81,15 +81,16 @@ class Test(BaseModel):
     task: Mapped["Task"] = relationship("Task", back_populates="test", passive_deletes=True)
 
     @classmethod
-    async def generate_tests(cls, count, session):
+    async def generate_tests(cls, count):
         f = Faker("EN")
         all_tests = []
         for i in range(count):
             test = cls(path=f.file_path(5))
-            session.add(test)
             all_tests.append(test)
-        session.add_all(all_tests)
-        await session.commit()
+
+        async with db_handler.get_session_context() as session:
+            session.add_all(all_tests)
+            await session.commit()
         return all_tests
 
 
@@ -109,23 +110,27 @@ class Task(BaseModel):
     test = relationship("Test", back_populates="task", passive_deletes=True)
 
     @classmethod
-    async def generate_tasks(cls, count, session: AsyncSession):
+    async def generate_tasks(cls, count):
         f = Faker("EN")
         all_tasks = []
-        for i in range(count):
-
-            task = cls(
-                title=f.sentence(nb_words=5),
-                description=f.text(max_nb_chars=255),
-                difficulty=random.choice([DIFFICULTLY_CHOICES.MEDIUM, DIFFICULTLY_CHOICES.EASY, DIFFICULTLY_CHOICES.HARD]),
-                category_id=random.randint(1, 3),
-                test_id=random.randint(1, 10),
-                constraints=f.text(max_nb_chars=100),
-                image=f.image_url(),
-            )
-            all_tasks.append(task)
-        session.add_all(all_tasks)
-        await session.commit()
+        async with db_handler.get_session_context() as session:
+            categories = await session.execute(select(Category.id))
+            tests = await session.execute(select(Test.id))
+            result_category = categories.scalars().all()
+            result_test = tests.scalars().all()
+            for i in range(count):
+                task = cls(
+                    title=f.sentence(nb_words=5),
+                    description=f.text(max_nb_chars=255),
+                    difficulty=random.choice([DIFFICULTLY_CHOICES.MEDIUM, DIFFICULTLY_CHOICES.EASY, DIFFICULTLY_CHOICES.HARD]),
+                    category_id=random.choice(result_category),
+                    test_id=random.choice(result_test),
+                    constraints=f.text(max_nb_chars=100),
+                    image=f.image_url(),
+                )
+                all_tasks.append(task)
+            session.add_all(all_tasks)
+            await session.commit()
         return all_tasks
 
 
@@ -144,39 +149,30 @@ class Solution(BaseModel):
     language  = relationship("Language", back_populates="solutions", passive_deletes=True, uselist=True)
 
     @classmethod
-    async def generate_solutions(cls, count, session: AsyncSession):
+    async def generate_solutions(cls, count, task_id=None):
         f = Faker("EN")
         all_solutions = []
-        from api.users.models import User
-        user = select(User).limit(15)
-        result_us = await session.execute(user)
-        user_id = choice(result_us.scalars().all()).id
-        language = await session.execute(select(Language))
-        choice_language = choice(language.scalars().all()).id
+        async with db_handler.get_session_context() as session:
+            from api.users.models import User
+            users = await session.execute(select(User.id))
+            tasks = await session.execute(select(Task.id))
+            languages = await session.execute(select(Language.id))
+            result_users = users.scalars().all()
+            result_tasks = tasks.scalars().all()
+            result_languages = languages.scalars().all()
 
-        for i in range(count):
-            task = cls(
-                user_id=user_id,
-                solution=f.text(max_nb_chars=555),
-                task_id=random.randint(1,1),
-                language_id=choice_language,
-                status=random.choice([TASK_STATUS_CHOICES.ACCEPTED, TASK_STATUS_CHOICES.IN_DEVELOPMENT]),
-                time=random.randint(10,1000),
-                memory=random.randint(1,25),
-                test_passed=random.randint(10,100)
-            )
-            all_solutions.append(task)
-        session.add_all(all_solutions)
-        await session.commit()
+            for i in range(count):
+                task = cls(
+                    user_id=random.choice(result_users),
+                    solution=f.text(max_nb_chars=555),
+                    task_id=task_id if task_id else choice(result_tasks),
+                    language_id=random.choice(result_languages),
+                    status=random.choice([TASK_STATUS_CHOICES.ACCEPTED, TASK_STATUS_CHOICES.IN_DEVELOPMENT]),
+                    time=random.randint(10,1000),
+                    memory=random.randint(1,25),
+                    test_passed=random.randint(10,100)
+                )
+                all_solutions.append(task)
+            session.add_all(all_solutions)
+            await session.commit()
         return all_solutions
-
-    @classmethod
-    async def generate_all_relations(cls, session: AsyncSession,tests_count: int=100, tasks_count: int=100, solutions_count: int=40):
-        # await Category.generate_categories(session=session)
-        # await Language.generate_languages(session=session)
-        await Test.generate_tests(tests_count,session=session)
-        await Task.generate_tasks(tasks_count, session=session)
-        await Solution.generate_solutions(solutions_count, session=session)
-
-
-

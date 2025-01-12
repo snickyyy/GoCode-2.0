@@ -1,7 +1,15 @@
+import asyncio
+from random import choices
+from string import ascii_letters, digits
+
+from faker import Faker
+from fastapi import HTTPException
 from sqlalchemy import String, Integer
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from api.users.auth.utils.utils import make_hash, check_hash
+from config.db import db_handler
 from core.models import BaseModel
 from enum import Enum
 
@@ -52,3 +60,15 @@ class User(BaseModel):
 
     def check_password(self, password):
         return check_hash(password, self.password)
+
+    @classmethod
+    async def generate_users(cls, count):
+        f = Faker("en")
+        users = []
+        for i in range(count):
+            users.append(cls(username="".join(choices(ascii_letters + digits, k=15)), password=f.password(length=12), email=f.email(), role=ROLES.USER))
+
+        async with db_handler.get_session_context() as session:
+            session.add_all(users)
+            await session.commit()
+        return users

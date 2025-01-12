@@ -9,11 +9,9 @@ from api.problems.service import ProblemsService
 from api.problems.utils.redis_ import check_in_waiting
 from api.shared.utils.pagination import Pagination
 from config.db import db_handler
-from api.problems.generate_test_data import router as generate_date_api
 from config.settings import settings
 
 router = APIRouter(prefix="/problems", tags=["problems"])
-router.include_router(generate_date_api)
 
 @router.get("/")
 async def problems_list(request: Request,page: int|None = 1, category: str|None=None, difficulty: str|None = None, session: AsyncSession = Depends(db_handler.get_session)):

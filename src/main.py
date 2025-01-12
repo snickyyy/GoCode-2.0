@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from faststream.rabbit import ExchangeType
 
 from api.shared.middlewares import auth_session
+from api.shared.generate_test_data_view import router as generate_data_api
 from api.users.views import router as users_api
 from api.problems.views import router as problems_api
 from config.settings import RabbitMQ, settings
@@ -67,3 +68,4 @@ app.middleware("http")(auth_session)
 
 app.include_router(users_api)
 app.include_router(problems_api)
+app.include_router(generate_data_api)
