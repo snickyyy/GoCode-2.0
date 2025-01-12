@@ -1,6 +1,7 @@
 from sqlalchemy import select, and_
 from sqlalchemy.sql import case
 from api.problems.models import Task, Solution, Category, Language
+from api.problems.schemas import SolutionFilter
 from api.shared.repository import BaseRepository
 
 
@@ -62,3 +63,19 @@ class LanguageRepository(BaseRepository):
 
 class SolutionRepository(BaseRepository):
     model = Solution
+
+    async def get_solutions(self, schema: SolutionFilter, limit: int=10, skip: int=0):
+        stmt = select(
+            self.model.id,
+            Language.name,
+            self.model.status,
+            self.model.time,
+            self.model.memory,
+        ).join(Language)
+        stmt = stmt.filter(
+            and_(
+                *[getattr(self.model, key) == value for key, value in schema.model_dump(exclude_unset=True).items()]
+            )
+        ).limit(limit).offset(skip)
+        result = await self.db.execute(stmt)
+        return result.mappings().all()

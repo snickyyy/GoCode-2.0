@@ -40,9 +40,10 @@ class SubmitTask(BaseModel):
         return value.capitalize()
 
 class SolutionFilter(BaseModel):
-    task_id: int
-    user_id: int
-    language_id: int
+    task_id: int|None = None
+    user_id: int|None = None
+    language_id: int|None = None
+    status: TASK_STATUS_CHOICES|None = None
 
 class UpdateSolution(BaseModel):
     solution: str

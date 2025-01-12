@@ -8,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 
 from api.problems.models import DIFFICULTLY_CHOICES, TASK_STATUS_CHOICES
 from api.problems.repository import ProblemsRepository, CategoryRepository, LanguageRepository, SolutionRepository
-from api.problems.schemas import TaskDetail, SolutionFilter, UpdateSolution, CreateSolution
+from api.problems.schemas import TaskDetail, SolutionFilter, UpdateSolution, CreateSolution, LanguageFilter
 from api.problems.utils.rabbitmq import push_message
 from api.problems.utils.redis_ import push_to_waiting, get_test_result, remove_from_waiting, remove_from_results
 from config.settings import settings
@@ -73,6 +73,14 @@ class ProblemsService:
             except DBAPIError:
                 raise HTTPException(status_code=409, detail="Maximum length of solution - 1445")
         return obj
+
+    async def get_solutions(self, task_id: int, language: None|str = None):
+        schema = SolutionFilter(status=TASK_STATUS_CHOICES.ACCEPTED, task_id=task_id)
+        if language:
+            language = await self.language_repository.strict_filter(LanguageFilter(name=language))
+            schema.language_id = language[0].id
+        solutions = await self.solution_repository.get_solutions(schema)
+        return solutions
 
     @staticmethod
     async def get_test_result(result_key: str|int, polling_rate_sec: int = 0.05, connection_attempts: int = 10000) -> dict:

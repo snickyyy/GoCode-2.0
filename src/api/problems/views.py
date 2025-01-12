@@ -85,3 +85,29 @@ async def problem_solution(request: Request, task_id: int, solution: SubmitTask,
     await service.write_solution(user_id=request.state.user.id, task_id=task_id, language_id=language_id[0].id, test_result=test_result)
 
     return {"detail": test_result, "testing_time": testing_time}
+
+@router.get("/{task_id}/solutions")
+async def problem_solutions(task_id: int, page: int|None=1, language:str|None=None, session: AsyncSession = Depends(db_handler.get_session)):
+    service = ProblemsService(
+        problems_repository=ProblemsRepository(session),
+        solution_repository=SolutionRepository(session),
+        language_repository=LanguageRepository(session)
+    )
+    total = await service.solution_repository.count_all()
+    data = await service.get_solutions(task_id=task_id, language=language)
+    paginator = Pagination(total, 10)
+    return {"detail":
+                {
+                    "solutions": data,
+                    "language": language,
+                    "total_solutions": total,
+                    "pagination": {
+                        "current_page": page,
+                        "total_pages": paginator.total_pages,
+                        "has_next": paginator.has_next(page),
+                        "has_previous": paginator.has_previous(page),
+                        "next_page": paginator.next_page(page),
+                        "previous_page": paginator.previous_page(page)
+                    }
+                }
+            }
