@@ -3,6 +3,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.problems.models import TASK_STATUS_CHOICES
 from api.problems.repository import ProblemsRepository, CategoryRepository, LanguageRepository, SolutionRepository
 from api.problems.schemas import SubmitTask, LanguageFilter
 from api.problems.service import ProblemsService
@@ -91,9 +92,10 @@ async def problem_solutions(task_id: int, page: int|None=1, language:str|None=No
         solution_repository=SolutionRepository(session),
         language_repository=LanguageRepository(session)
     )
-    total = await service.solution_repository.count_all()
-    data = await service.get_solutions(task_id=task_id, language=language)
+    total = await service.get_total_solutions(task_id)
     paginator = Pagination(total, 10)
+    offset, limit = paginator.get_offset_and_limit(page)
+    data = await service.get_solutions(task_id=task_id, language=language, limit=limit, skip=offset)
     return {"detail":
                 {
                     "solutions": data,

@@ -74,13 +74,20 @@ class ProblemsService:
                 raise HTTPException(status_code=409, detail="Maximum length of solution - 1445")
         return obj
 
-    async def get_solutions(self, task_id: int, language: None|str = None):
+    async def get_solutions(self, task_id: int, language: None|str = None, limit=10, skip=0):
         schema = SolutionFilter(status=TASK_STATUS_CHOICES.ACCEPTED, task_id=task_id)
         if language:
             language = await self.language_repository.strict_filter(LanguageFilter(name=language))
             schema.language_id = language[0].id
-        solutions = await self.solution_repository.get_solutions(schema)
+        solutions = await self.solution_repository.get_solutions(schema, limit=limit, skip=skip)
         return solutions
+
+    async def get_total_solutions(self, task_id):
+        return await self.solution_repository.count_all(
+            filters=[self.solution_repository.model.status == TASK_STATUS_CHOICES.ACCEPTED,
+                     self.solution_repository.model.task_id == task_id
+                     ]
+        )
 
     @staticmethod
     async def get_test_result(result_key: str|int, polling_rate_sec: int = 0.05, connection_attempts: int = 10000) -> dict:

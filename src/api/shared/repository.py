@@ -79,7 +79,9 @@ class BaseRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def count_all(self):
+    async def count_all(self, filters: list=None):
         stmt = select(func.count(self.model.id))
+        if filters:
+            stmt = stmt.filter(*filters)
         result = await self.db.scalar(stmt)
         return result
