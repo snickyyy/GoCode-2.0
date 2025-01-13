@@ -32,7 +32,7 @@ class TaskDetail(BaseModel):
 
 class SubmitTask(BaseModel):
     code: str
-    language: str
+    language: str = "Python"
 
     @field_validator("language", mode="after")
     @classmethod

@@ -2,7 +2,9 @@ from config.settings import Redis, settings
 
 
 async def push_to_waiting(id: int, *args):
-    return await settings.REDIS.testing_system.sadd(Redis.problems_namespace.IN_SUBMIT_WAITING_NAME, id, *args)
+    await settings.REDIS.testing_system.sadd(Redis.problems_namespace.IN_SUBMIT_WAITING_NAME, id, *args)
+    await settings.REDIS.testing_system.expire(id, 60)
+    return
 
 async def check_in_waiting(id: int):
     return await settings.REDIS.testing_system.sismember(Redis.problems_namespace.IN_SUBMIT_WAITING_NAME, id)
