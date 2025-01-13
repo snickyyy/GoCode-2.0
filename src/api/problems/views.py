@@ -15,7 +15,7 @@ from config.settings import settings
 router = APIRouter(prefix="/problems", tags=["problems"])
 
 @router.get("/")
-async def problems_list(request: Request,page: int|None = 1, category: str|None=None, difficulty: str|None = None, session: AsyncSession = Depends(db_handler.get_session)):
+async def problems_list(request: Request,page: int|None = 1, category: str|None=None, difficulty: str|None = None, name: str|None = None, session: AsyncSession = Depends(db_handler.get_session)):
     service = ProblemsService(
         ProblemsRepository(session),
         CategoryRepository(session),
@@ -30,7 +30,8 @@ async def problems_list(request: Request,page: int|None = 1, category: str|None=
         skip=offset,
         limit=limit,
         category=category,
-        difficulty=difficulty
+        difficulty=difficulty,
+        name=name,
     )
     return {"detail":
                 {

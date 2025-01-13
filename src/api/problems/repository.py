@@ -36,10 +36,13 @@ class ProblemsRepository(BaseRepository):
 
         category = kwargs.get('category')
         diff = kwargs.get('difficulty')
+        name = kwargs.get('name')
         if category:
             stmt = stmt.filter(Category.name == category)
         if diff:
             stmt = stmt.filter(difficulty_label == diff)
+        if name:
+            stmt = stmt.filter(self.model.title.ilike(f'%{name}%'))
         stmt = stmt.outerjoin(
             Solution,
             and_(Solution.task_id == Task.id, Solution.user_id == user_id)
