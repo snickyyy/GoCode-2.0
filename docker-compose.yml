@@ -22,7 +22,6 @@ services:
     container_name: postgres
     ports:
       - "5432:5432"
-      - "15672:15672"
     volumes:
       - pg_data:/var/Lib/postgresql/data
     restart: on-failure
