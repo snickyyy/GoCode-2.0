@@ -10,6 +10,11 @@ from config.db import db_handler
 
 from core.models import BaseModel
 
+from api.users.models import User
+from api.users.auth.models import Session
+from api.problems.models import Task, Test, Language, Category
+from api.forum.models import Post, Comment
+
 engine = create_async_engine("sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False})
 
 TestingSessionLocal = async_sessionmaker(
@@ -44,10 +49,6 @@ app.dependency_overrides[db_handler.get_session] = get_db
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_db():
-    from api.users.models import User
-    from api.users.auth.models import Session
-    from api.problems.models import Task, Test, Language, Category
-    from api.forum.models import Post, Comment
     async with engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.create_all)
     yield

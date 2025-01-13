@@ -66,9 +66,23 @@ class User(BaseModel):
         f = Faker("en")
         users = []
         for i in range(count):
-            users.append(cls(username="".join(choices(ascii_letters + digits, k=15)), password=f.password(length=12), email=f.email(), role=ROLES.USER))
+            users.append(cls(
+                username="".join(choices(ascii_letters + digits, k=20)),
+                password=f.password(length=12),
+                email="".join(choices(ascii_letters + digits, k=40)) + "@example.com",
+                role=ROLES.USER)
+            )
 
         async with db_handler.get_session_context() as session:
             session.add_all(users)
             await session.commit()
         return users
+
+    @classmethod
+    async def create_admin_user(cls, username: str, password: str, email: str):
+        user = cls(username=username, email=email, role=ROLES.ADMIN)
+        user.set_password(password)
+        async with db_handler.get_session_context() as session:
+            session.add(user)
+            await session.commit()
+        return user
