@@ -1,9 +1,15 @@
 from faker import Faker
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.problems.models import Test, Task, Category
+from api.users.auth.models import Session
 
+
+async def get_last_session(session):
+    stmt = select(Session.id).where(Session.created_at == select(func.max(Session.created_at))).limit(1)
+    result = await session.execute(stmt)
+    return result.scalar()
 
 async def create_tests(count, session: AsyncSession):
     f = Faker("EN")

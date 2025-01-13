@@ -14,6 +14,7 @@ async def test_problem_details(client, session):
 
     response = await client.get(url)
     assert response.status_code == 200
+    assert list(response.json()["detail"].keys()) == ["id", "title", "description", "category", "difficulty", "image"]
 
 @pytest.mark.asyncio
 async def test_get_problems(client, session):

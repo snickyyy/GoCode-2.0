@@ -56,7 +56,7 @@ async def problems_list(request: Request,page: int|None = 1, category: str|None=
 @router.get("/{id}")
 async def problem_detail(id: int, session: AsyncSession = Depends(db_handler.get_session)):
     data = await ProblemsService(ProblemsRepository(session)).get_task_details(id)
-    return data
+    return {"detail": data}
 
 @router.post("/{task_id}/solution")
 async def problem_solution(request: Request, task_id: int, solution: SubmitTask, session: AsyncSession = Depends(db_handler.get_session)):

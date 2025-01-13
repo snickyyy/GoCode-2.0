@@ -9,13 +9,12 @@ from main import app
 from config.db import db_handler
 
 from core.models import BaseModel
-
-from api.users.models import User
+from api.users.models import User, ROLES
 from api.users.auth.models import Session
 from api.problems.models import Task, Test, Language, Category
 from api.forum.models import Post, Comment
 
-engine = create_async_engine("sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False})
+engine = create_async_engine("sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": True})
 
 TestingSessionLocal = async_sessionmaker(
     bind=engine,
@@ -59,6 +58,15 @@ async def setup_db():
 async def session():
     async with get_session_context() as session:
         yield session
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def admin_user(setup_db):
+    user = User(username="admin", email="admin@gmail.com",role=ROLES.ADMIN)
+    user.set_password("admin")
+    async with get_session_context() as session:
+        session.add(user)
+        await session.commit()
+    return user
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def client():
