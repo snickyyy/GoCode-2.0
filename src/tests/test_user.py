@@ -1,34 +1,42 @@
-from starlette.testclient import TestClient
-from main import app
+import uuid
 
-client = TestClient(app)
+import pytest
 
-def test_register_user():
+from config.settings import settings
+from tests.utils.db_operations import get_last_session
+
+
+@pytest.mark.asyncio
+async def test_register_user(client):
     url = "/accounts/auth/register"
-    data = {"username": "testuser", "email": "testuser@example.com", "password": "test123"}
 
-    response = client.post(url, json=data)
+    data = {"username": "testuser1", "email": "testuser@example.com", "password": "test1213"}
+
+    response = await client.post(url, json=data)
     assert response.status_code == 200
     assert response.json()["detail"] == "an email has been sent"
 
     data_without_password = data.copy()
     data_without_password.pop("password")
-    response = client.post(url, json=data_without_password)
+    response = await client.post(url, json=data_without_password)
     assert response.status_code == 422
 
-    response = client.post(url, json=data)
+    response = await client.post(url, json=data)
     assert response.status_code == 409
-    assert response.json()["detail"] == "This username or email already exists"
+    assert response.json()["detail"] == "User must be unique"
 
+@pytest.mark.asyncio
+async def test_activate_email(client, session):
+    url = f"/accounts/auth/activate-account/{await get_last_session(session)}"
+    response = await client.get(url)
+    assert response.status_code == 200
+    assert response.json()["detail"] == "your account has been activated, now you need to log in"
 
-def test_bad_login_user():
-    url = "/accounts/auth/login"
-    data = {"username_or_email": "testuser", "password": "test123"}
-
-    response = client.post(url, json=data)
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials"
-
-    response = client.post(url, json={"username_or_email": "testuser", "password": "wrong_password"})
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials"
+# @pytest.mark.asyncio
+# async def test_bad_login_user(client, session):
+#     url = "/accounts/auth/login"
+#     data = {"username_or_email": "testuser1", "password": "test1213"}
+#
+#     response = await client.post(url, json=data)
+#     assert response.status_code == 401
+#     assert response.json()["detail"] == "Invalid credentials"

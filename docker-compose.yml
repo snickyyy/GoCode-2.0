@@ -1,0 +1,88 @@
+services:
+  backend:
+    build: ./
+    working_dir: /GoCode
+    container_name: backend
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "8000:8000"
+    command:
+      - ./commands/start_server.sh
+    volumes:
+      - ./src:/GoCode/src
+      - ./commands:/GoCode/commands
+      - ./.env:/GoCode/.env
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:16.4
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/Lib/postgresql/data
+    restart: on-failure
+    env_file:
+      - .env
+
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    volumes:
+      - ./commands:/GoCode/commands
+    ports:
+      - "5672:5672"
+#      - "15672:15672"
+    restart: on-failure
+
+  redis:
+    image: redis:7.2.6-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: on-failure
+    depends_on:
+      - backend
+      - rabbitmq
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DATABASES=${REDIS_DATABASES}
+#    volumes:
+#      - redis:/var/lib/redis
+
+  testing_control:
+    build: ./testing_control/
+    container_name: testing_control
+    command:
+      - ./testing_control/commands/start_testing_control.sh
+    depends_on:
+      - backend
+      - rabbitmq
+    restart: on-failure
+    working_dir: /GoCode
+    volumes:
+      - ./commands:/GoCode/commands
+      - ./testing_control:/GoCode/testing_control
+
+  pg_admin:
+    image: dpage/pgadmin4
+    container_name: pg_admin
+    restart: on-failure
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PG_ADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASSWORD}
+    ports:
+      - "80:80"
+
+
+volumes:
+  pg_data: { }
+#  rabbitmq: { }
+#  redis: { }

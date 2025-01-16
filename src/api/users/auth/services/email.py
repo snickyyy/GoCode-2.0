@@ -16,7 +16,7 @@ conf = ConnectionConfig(
 )
 
 async def send_email(email, token, username=""):
-    html = f"""<p>Hi {username} this registration mail, thanks for using GoCode<br><a href="http://{settings.HOST}/accounts/auth/activate-account/{token}">click please</a> </p> """
+    html = f"""<p>Hi {username} this registration mail, thanks for using GoCode<br><a href="http://127.0.0.1:8000/accounts/auth/activate-account/{token}">click please</a> </p> """
 
     message = MessageSchema(
         subject="GoCode confirm account",
