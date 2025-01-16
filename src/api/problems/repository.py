@@ -1,8 +1,11 @@
+from fastapi import HTTPException
 from sqlalchemy import select, and_
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import case
-from api.problems.models import Task, Solution, Category, Language
+from api.problems.models import Task, Solution, Category, Language, TASK_STATUS_CHOICES
 from api.problems.schemas import SolutionFilter
 from api.shared.repository import BaseRepository
+from api.users.models import User
 
 
 class ProblemsRepository(BaseRepository):
@@ -66,6 +69,26 @@ class LanguageRepository(BaseRepository):
 
 class SolutionRepository(BaseRepository):
     model = Solution
+
+    async def get_one_info(self, solution_id: int):
+        stmt = (
+            select(
+                self.model.id,
+                self.model.solution,
+                User.username,
+                self.model.time,
+                self.model.memory,
+                Language.name
+            )
+            .join(self.model.user)
+            .join(self.model.language)
+            .filter(and_(self.model.id == solution_id, self.model.status == TASK_STATUS_CHOICES.ACCEPTED))
+        )
+        result = await self.db.execute(stmt)
+        res = result.first()
+        if not res:
+            return False
+        return res
 
     async def get_solutions(self, schema: SolutionFilter, limit: int=10, skip: int=0):
         stmt = select(

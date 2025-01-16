@@ -8,7 +8,8 @@ from sqlalchemy.exc import DBAPIError
 
 from api.problems.models import DIFFICULTLY_CHOICES, TASK_STATUS_CHOICES
 from api.problems.repository import ProblemsRepository, CategoryRepository, LanguageRepository, SolutionRepository
-from api.problems.schemas import TaskDetail, SolutionFilter, UpdateSolution, CreateSolution, LanguageFilter
+from api.problems.schemas import TaskDetail, SolutionFilter, UpdateSolution, CreateSolution, LanguageFilter, \
+    SolutionDetail
 from api.problems.utils.rabbitmq import push_message
 from api.problems.utils.redis_ import push_to_waiting, get_test_result, remove_from_waiting, remove_from_results
 from config.settings import settings
@@ -16,7 +17,7 @@ from config.settings import settings
 
 class ProblemsService:
     def __init__(self,
-                 problems_repository: ProblemsRepository,
+                 problems_repository: ProblemsRepository=None,
                  category_repository: CategoryRepository=None,
                  language_repository: LanguageRepository=None,
                  solution_repository: SolutionRepository=None
@@ -77,7 +78,9 @@ class ProblemsService:
     async def get_solutions(self, task_id: int, language: None|str = None, limit=10, skip=0):
         schema = SolutionFilter(status=TASK_STATUS_CHOICES.ACCEPTED, task_id=task_id)
         if language:
-            language = await self.language_repository.strict_filter(LanguageFilter(name=language))
+            language = await self.language_repository.strict_filter(LanguageFilter(name=language.capitalize()))
+            if not language:
+                raise HTTPException(status_code=404, detail="Language not found")
             schema.language_id = language[0].id
         solutions = await self.solution_repository.get_solutions(schema, limit=limit, skip=skip)
         return solutions
@@ -87,6 +90,19 @@ class ProblemsService:
             filters=[self.solution_repository.model.status == TASK_STATUS_CHOICES.ACCEPTED,
                      self.solution_repository.model.task_id == task_id
                      ]
+        )
+
+    async def get_solution_detail(self, solution_id: int):
+        solution = await self.solution_repository.get_one_info(solution_id)
+        if not solution:
+            raise HTTPException(status_code=404, detail="Solution not found")
+        return SolutionDetail(
+            solution_id=solution.id,
+            solution=solution.solution,
+            own_username=solution.username,
+            time=solution.time,
+            memory=solution.memory,
+            language=solution.name
         )
 
     @staticmethod

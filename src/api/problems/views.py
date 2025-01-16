@@ -101,7 +101,7 @@ async def problem_solutions(task_id: int, page: int|None=1, language:str|None=No
                 {
                     "solutions": data,
                     "language": language,
-                    "total_solutions": total,
+                    "total_solutions_for_this_task": total,
                     "pagination": {
                         "current_page": page,
                         "total_pages": paginator.total_pages,
@@ -112,3 +112,9 @@ async def problem_solutions(task_id: int, page: int|None=1, language:str|None=No
                     }
                 }
             }
+
+@router.get("/solution/{solution_id}")
+async def get_solution_detail(solution_id: int, session: AsyncSession = Depends(db_handler.get_session)):
+    service = ProblemsService(solution_repository=SolutionRepository(session))
+    data = await service.get_solution_detail(solution_id)
+    return {"detail": data}

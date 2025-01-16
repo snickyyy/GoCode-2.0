@@ -59,3 +59,13 @@ class CreateSolution(UpdateSolution):
 
 class LanguageFilter(BaseModel):
     name: str
+
+class SolutionDetail(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    solution_id: int
+    solution: str
+    own_username: str
+    time: int
+    memory: int
+    language: str
